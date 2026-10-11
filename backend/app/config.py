@@ -33,7 +33,7 @@ class Settings:
         o.strip() for o in os.getenv("KMRL_CORS_ORIGINS", "http://localhost:5174,http://127.0.0.1:5174").split(",") if o.strip()
     )
     local_engine: str = os.getenv("KMRL_LOCAL_ENGINE", "trained").lower()
-    model_dir: Path = field(default_factory=lambda: Path(os.getenv("KMRL_MODEL_DIR", BACKEND_DIR / "models" / "kmrl-copilot")))
+    model_dir: Path = field(default_factory=lambda: Path(os.getenv("KMRL_MODEL_DIR", BACKEND_DIR / "models" / "kmrl-logreader")))
     model_device: str = os.getenv("KMRL_MODEL_DEVICE", "auto")   # auto | cuda | cpu
     ollama_host: str = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
     ollama_model: str = os.getenv("OLLAMA_MODEL", "qwen3:14b")

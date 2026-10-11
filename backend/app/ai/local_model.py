@@ -1,4 +1,4 @@
-"""On-device engine: the KMRL copilot model fine-tuned by ml/train.py.
+"""On-device engine: the kmrl-logreader model fine-tuned by ml/train.py.
 
 Runs fully offline with Hugging Face transformers on the GPU when one is
 available (CPU otherwise). The model loads in a background thread at startup so
@@ -61,7 +61,7 @@ class LocalModelProvider:
 
     # ------------------------------------------------------------------ API
     def info(self) -> AIInfo:
-        name = f"kmrl-copilot ({self.base_model.split('/')[-1]} fine-tune, {self.device.upper()})"
+        name = f"kmrl-logreader ({self.base_model.split('/')[-1]} fine-tune, {self.device.upper()})"
         if self._ready.is_set():
             return AIInfo(edition="local", engine="On-device model", model=name, ready=True)
         note = self._error or "Loading the on-device model…"

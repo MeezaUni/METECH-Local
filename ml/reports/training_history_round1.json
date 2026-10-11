@@ -1,5 +1,5 @@
 {
-  "name": "kmrl-copilot",
+  "name": "kmrl-logreader",
   "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
   "train_examples": 8000,
   "epochs": 1,

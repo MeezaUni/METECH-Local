@@ -1,4 +1,4 @@
-"""Generate the training data for the KMRL depot copilot.
+"""Generate the training data for kmrl-logreader, the on-device model.
 
 There is no public corpus of KMRL logbooks, so we synthesise one. Each example is
 built from a structured ground truth (the updates or query) and then *rendered*

@@ -1,7 +1,7 @@
 """Optional engine: a general-purpose LLM served by a local Ollama install.
 
 No training needed, but needs a much bigger model (several GB) than the
-fine-tuned copilot. Select with KMRL_LOCAL_ENGINE=ollama and OLLAMA_MODEL.
+fine-tuned kmrl-logreader model. Select with KMRL_LOCAL_ENGINE=ollama and OLLAMA_MODEL.
 """
 from __future__ import annotations
 

@@ -72,8 +72,8 @@ def grid(ax, axis: str) -> None:
 # --------------------------------------------------------------- 1. loss curves
 def fig_loss() -> None:
     fig, ax = plt.subplots(figsize=(7.2, 3.8))
-    for name, folder, color, label in (("round1", "kmrl-copilot-round1", ROUND1, "Round 1 (8,000 examples)"),
-                                       ("round2", "kmrl-copilot", ROUND2, "Round 2 (9,199 examples)")):
+    for name, folder, color, label in (("round1", "kmrl-logreader-round1", ROUND1, "Round 1 (8,000 examples)"),
+                                       ("round2", "kmrl-logreader", ROUND2, "Round 2 (9,199 examples)")):
         h = history(name, folder)
         train = [(x["step"], x["loss"]) for x in h if "loss" in x]
         val = [(x["step"], x["val_loss"]) for x in h if x.get("val_loss") is not None]
@@ -101,8 +101,8 @@ ENGINES = [  # (report file, label, is_ours)
     ("eval_rules.json", "Rule engine (regex)", False),
     ("eval_base.json", "Qwen2.5-0.5B, no fine-tuning (few-shot)", False),
     ("eval_ollama.json", "qwen3.5 9.7B, no fine-tuning", False),
-    ("eval_model_round1.json", "kmrl-copilot round 1", False),
-    ("eval_model_round2.json", "kmrl-copilot round 2 (ours)", True),
+    ("eval_model_round1.json", "kmrl-logreader round 1", False),
+    ("eval_model_round2.json", "kmrl-logreader round 2 (ours)", True),
 ]
 
 

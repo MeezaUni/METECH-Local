@@ -1,4 +1,4 @@
-"""Download the trained kmrl-copilot model from the project's GitHub release.
+"""Download the trained kmrl-logreader model from the project's GitHub release.
 
     uv run python scripts/get_model.py            # from backend/
 
@@ -18,8 +18,8 @@ import zipfile
 from pathlib import Path
 
 BACKEND = Path(__file__).resolve().parents[1]
-DEST = BACKEND / "models" / "kmrl-copilot"
-URL = os.getenv("KMRL_MODEL_URL", "https://github.com/MeezaUni/METECH-Local/releases/latest/download/kmrl-copilot.zip")
+DEST = BACKEND / "models" / "kmrl-logreader"
+URL = os.getenv("KMRL_MODEL_URL", "https://github.com/MeezaUni/METECH-Local/releases/latest/download/kmrl-logreader.zip")
 
 
 def download(url: str, to: Path) -> None:
@@ -41,7 +41,7 @@ def main() -> int:
         return 0
     print(f"Downloading the trained model from {URL}")
     with tempfile.TemporaryDirectory() as tmp:
-        archive = Path(tmp) / "kmrl-copilot.zip"
+        archive = Path(tmp) / "kmrl-logreader.zip"
         try:
             if Path(URL).is_file():
                 shutil.copy(URL, archive)
@@ -58,7 +58,7 @@ def main() -> int:
             print("The app still runs with its rule engine. To train the model yourself, run train.bat "
                   "(about 15 minutes on an NVIDIA GPU).", file=sys.stderr)
             return 1
-        # Accept archives with or without a top-level kmrl-copilot/ folder.
+        # Accept archives with or without a top-level kmrl-logreader/ folder.
         root = next((p.parent for p in staging.rglob("config.json")), None)
         if root is None:
             print("The downloaded archive does not contain a model (config.json missing).", file=sys.stderr)

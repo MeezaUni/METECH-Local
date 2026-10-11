@@ -33,7 +33,7 @@ SAMPLES = [
 ]
 
 
-class Copilot:
+class LogReader:
     def __init__(self, model_dir: Path):
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -47,7 +47,7 @@ class Copilot:
         dtype = torch.bfloat16 if self.device == "cuda" else torch.float32
         self.model = AutoModelForCausalLM.from_pretrained(model_dir, dtype=dtype).to(self.device).eval()
         params = sum(p.numel() for p in self.model.parameters()) / 1e6
-        print(f"kmrl-copilot loaded on {self.device.upper()} in {time.perf_counter() - t:.1f}s ({params:.0f}M parameters)\n")
+        print(f"kmrl-logreader loaded on {self.device.upper()} in {time.perf_counter() - t:.1f}s ({params:.0f}M parameters)\n")
 
     def generate(self, messages: list[dict], max_new_tokens: int) -> tuple[str, float, int]:
         prompt = self.tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
@@ -60,7 +60,7 @@ class Copilot:
         return self.tok.decode(new, skip_special_tokens=True), time.perf_counter() - t, len(new)
 
 
-def show_parse(bot: Copilot, text: str, today: date) -> None:
+def show_parse(bot: LogReader, text: str, today: date) -> None:
     raw, secs, n = bot.generate(parse_messages(text, today), max_new_tokens=min(1024, 160 + 4 * len(text)))
     print(f"Raw model output ({n} tokens, {secs:.1f}s):\n  {raw}\n")
     try:
@@ -82,7 +82,7 @@ def show_parse(bot: Copilot, text: str, today: date) -> None:
     print()
 
 
-def show_ask(bot: Copilot, question: str) -> None:
+def show_ask(bot: LogReader, question: str) -> None:
     raw, secs, n = bot.generate(ask_messages(question), max_new_tokens=64)
     print(f"Structured query ({n} tokens, {secs:.2f}s): {raw}\n")
 
@@ -91,11 +91,11 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("text", nargs="?", help="logbook text to read")
     ap.add_argument("--ask", help="a supervisor question instead")
-    ap.add_argument("--model-dir", type=Path, default=ROOT.parent / "backend" / "models" / "kmrl-copilot")
+    ap.add_argument("--model-dir", type=Path, default=ROOT.parent / "backend" / "models" / "kmrl-logreader")
     ap.add_argument("--today", default=date.today().isoformat())
     args = ap.parse_args()
     today = date.fromisoformat(args.today)
-    bot = Copilot(args.model_dir)
+    bot = LogReader(args.model_dir)
 
     if args.ask:
         show_ask(bot, args.ask)

@@ -7,8 +7,8 @@
 | Rule engine (regex) | 76.7% | 97.4% | 77.6% | 84.0% | 46.9% |
 | Qwen2.5-0.5B, no fine-tuning (few-shot) | 4.7% | 15.0% | 6.1% | 24.0% | 7.5% |
 | qwen3.5 9.7B, no fine-tuning | 48.8% | 89.3% | 51.0% | 60.0% | - |
-| kmrl-copilot round 1 | 90.7% | 91.8% | 91.8% | 88.0% | 88.1% |
-| kmrl-copilot round 2 (ours) | 97.7% | 100.0% | 98.0% | 100.0% | 98.7% |
+| kmrl-logreader round 1 | 90.7% | 91.8% | 91.8% | 88.0% | 88.1% |
+| kmrl-logreader round 2 (ours) | 97.7% | 100.0% | 98.0% | 100.0% | 98.7% |
 | Gemini (cloud API, reference) | 100.0% | 100.0% | 100.0% | 100.0% | - |
 
 ## Recall by update type (both test sets)

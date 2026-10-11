@@ -15,7 +15,7 @@ fi
 cd backend
 echo "Installing Python packages (the first run downloads PyTorch)..."
 uv sync --inexact
-if [ ! -f models/kmrl-copilot/config.json ]; then
+if [ ! -f models/kmrl-logreader/config.json ]; then
   uv run python scripts/get_model.py || echo "  Continuing with the built-in rule engine. See README to train the model yourself."
 fi
 echo; echo "  METECH Local is running at http://127.0.0.1:8020   (Ctrl+C to stop)"; echo

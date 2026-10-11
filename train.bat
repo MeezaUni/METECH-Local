@@ -1,5 +1,5 @@
 @echo off
-rem Generate the dataset, fine-tune the on-device copilot model and score it.
+rem Generate the dataset, fine-tune the on-device model (kmrl-logreader) and score it.
 setlocal
 cd /d "%~dp0backend"
 set PYTHONIOENCODING=utf-8

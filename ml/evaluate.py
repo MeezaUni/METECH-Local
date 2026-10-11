@@ -1,7 +1,7 @@
 """Score an engine on the synthetic validation set and the hand-written real-world set.
 
     uv run python ../ml/evaluate.py --engine rules
-    uv run python ../ml/evaluate.py --engine model [--model-dir ../backend/models/kmrl-copilot] [--tag round2]
+    uv run python ../ml/evaluate.py --engine model [--model-dir ../backend/models/kmrl-logreader] [--tag round2]
     uv run python ../ml/evaluate.py --engine base     # Qwen2.5-0.5B-Instruct before fine-tuning (few-shot prompt)
     uv run python ../ml/evaluate.py --engine ollama --sets realworld   # a general 10B model via Ollama, no fine-tuning
 
@@ -269,7 +269,7 @@ def score(rows: list[dict], preds: list[object]) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--engine", choices=["rules", "model", "base", "ollama"], required=True)
-    ap.add_argument("--model-dir", type=Path, default=ROOT.parent / "backend" / "models" / "kmrl-copilot")
+    ap.add_argument("--model-dir", type=Path, default=ROOT.parent / "backend" / "models" / "kmrl-logreader")
     ap.add_argument("--ollama-model", default="qwen3.5:latest")
     ap.add_argument("--sets", nargs="+", choices=["synthetic", "realworld"], default=["synthetic", "realworld"])
     ap.add_argument("--tag", help="report name suffix, e.g. round1 -> reports/eval_model_round1.json")

@@ -31,7 +31,7 @@ echo Installing Python packages (the first run downloads PyTorch, about 3 GB)...
 uv sync --inexact || ( popd & pause & exit /b 1 )
 
 rem ---- the trained model (downloaded once) ----------------------------------
-if not exist models\kmrl-copilot\config.json call :get_model
+if not exist models\kmrl-logreader\config.json call :get_model
 
 echo.
 echo   METECH Local is running at http://127.0.0.1:8020   (close this window to stop)

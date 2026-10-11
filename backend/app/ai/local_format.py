@@ -9,6 +9,9 @@ import json
 import re
 from datetime import date
 
+# The prompts below are the exact text the shipped model was trained with (they still call it the
+# "depot copilot", the project's former working name). Changing a word changes what the model sees,
+# so they stay as they are until the model is retrained.
 PARSE_SYSTEM = (
     "You are the KMRL depot copilot. Extract fleet updates from the logbook text. "
     "Reply with JSON only: {\"updates\": [...]}. Train ids are KMRL-TS-NNN. "

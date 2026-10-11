@@ -1,4 +1,4 @@
-"""Fine-tune the KMRL depot copilot with LoRA and export a merged, offline-ready model.
+"""Fine-tune kmrl-logreader with LoRA and export a merged, offline-ready model.
 
     cd backend
     uv sync --group train
@@ -8,11 +8,11 @@
 
 If a run is interrupted, the adapter saved after the last finished epoch can still be exported:
 
-    uv run python ../ml/train.py --merge-from ../backend/models/kmrl-copilot-checkpoints/epoch-1
+    uv run python ../ml/train.py --merge-from ../backend/models/kmrl-logreader-checkpoints/epoch-1
 
 Base model: Qwen2.5-0.5B-Instruct (Apache-2.0). It is downloaded once from the
 Hugging Face Hub; after training, everything runs offline from
-backend/models/kmrl-copilot.
+backend/models/kmrl-logreader.
 
 Only the assistant's JSON answer is trained on (prompt tokens are masked), so
 the model learns the extraction task without memorising the prompt.
@@ -112,7 +112,7 @@ def eval_loss(model, examples: list[dict], pad_id: int, device: str, size: int) 
 def export(model, tok, out: Path, meta: dict) -> None:
     """Merge the LoRA adapter into the base weights and save one plain, offline-loadable model."""
     merged = model.merge_and_unload().to(torch.bfloat16)
-    # The base model ships chat-sampling defaults (temperature, top_p, repetition_penalty 1.1). The copilot
+    # The base model ships chat-sampling defaults (temperature, top_p, repetition_penalty 1.1). The model
     # emits JSON, which repeats keys by design, so save plain deterministic decoding as the default.
     gc = merged.generation_config
     gc.do_sample, gc.repetition_penalty, gc.temperature, gc.top_p, gc.top_k = False, 1.0, None, None, None
@@ -130,7 +130,7 @@ def merge_only(args) -> None:
     tok = AutoTokenizer.from_pretrained(ckpt)
     base = AutoModelForCausalLM.from_pretrained(info["base_model"], dtype=torch.float32)
     model = PeftModel.from_pretrained(base, ckpt)
-    export(model, tok, args.out, {**info, "name": "kmrl-copilot", "exported_from": str(ckpt)})
+    export(model, tok, args.out, {**info, "name": "kmrl-logreader", "exported_from": str(ckpt)})
 
 
 def main() -> None:
@@ -143,8 +143,8 @@ def main() -> None:
     ap.add_argument("--no-grad-checkpointing", action="store_true", help="faster, but needs more than 8 GB of VRAM")
     ap.add_argument("--max-len", type=int, default=640)
     ap.add_argument("--lora-r", type=int, default=32)
-    ap.add_argument("--out", type=Path, default=MODELS / "kmrl-copilot")
-    ap.add_argument("--checkpoints", type=Path, default=MODELS / "kmrl-copilot-checkpoints")
+    ap.add_argument("--out", type=Path, default=MODELS / "kmrl-logreader")
+    ap.add_argument("--checkpoints", type=Path, default=MODELS / "kmrl-logreader-checkpoints")
     ap.add_argument("--merge-from", type=Path, help="skip training; export a model from this adapter checkpoint")
     ap.add_argument("--seed", type=int, default=7)
     args = ap.parse_args()
@@ -236,7 +236,7 @@ def main() -> None:
     minutes = (time.perf_counter() - started) / 60
     print(f"training finished in {minutes:.1f} min, merging adapter into the base weights", flush=True)
     export(model, tok, args.out, {
-        "name": "kmrl-copilot", **run_info, "trained_at": datetime.now().isoformat(timespec="seconds"),
+        "name": "kmrl-logreader", **run_info, "trained_at": datetime.now().isoformat(timespec="seconds"),
         "minutes": round(minutes, 1),
         "final_val_loss": next((h["val_loss"] for h in reversed(history) if h.get("val_loss") is not None), None),
         "history": history,

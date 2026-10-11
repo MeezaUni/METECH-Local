@@ -1,5 +1,5 @@
 {
-  "engine": "trained model (kmrl-copilot-round1, cuda)",
+  "engine": "trained model (kmrl-logreader-round1, cuda)",
   "synthetic": {
     "parse_n": 478,
     "parse_valid": 478,

@@ -1,4 +1,4 @@
-# Training the on-device copilot
+# Training kmrl-logreader, the on-device model
 
 The local edition replaces Gemini with a small language model fine-tuned for exactly two jobs:
 
@@ -13,13 +13,13 @@ Run everything with `train.bat` in the project root, or step by step from `backe
 uv sync --group train
 uv run python ..\ml\paraphrase.py              :: optional, ~20-30 min: teacher rewrites via local Ollama (qwen3.5)
 uv run python ..\ml\generate_dataset.py        :: 8,000 template examples (+ teacher rewrites if present)
-uv run python ..\ml\train.py                   :: LoRA fine-tune (~16 min), merge, save to backend\models\kmrl-copilot
+uv run python ..\ml\train.py                   :: LoRA fine-tune (~16 min), merge, save to backend\models\kmrl-logreader
 uv run python ..\ml\evaluate.py --engine rules :: baseline
 uv run python ..\ml\evaluate.py --engine model :: trained model
 ```
 
 A run that stops after an epoch can still be exported:
-`uv run python ..\ml\train.py --merge-from ..\backend\models\kmrl-copilot-checkpoints\epoch-1`
+`uv run python ..\ml\train.py --merge-from ..\backend\models\kmrl-logreader-checkpoints\epoch-1`
 
 ## Why this approach
 
@@ -75,8 +75,8 @@ Hand-written real-world test set (43 logbook messages, 25 questions), scored as 
 | Qwen2.5-0.5B, **no fine-tuning** (detailed prompt + 3 examples) | 4.7% | 15.0% / 6.1% | 24.0% | 7.5% / 19.1% |
 | qwen3.5 9.7B via Ollama, no fine-tuning | 48.8% | 89.3% / 51.0% | 60.0% | not run |
 | Rule engine (regular expressions) | 76.7% | 97.4% / 77.6% | 84.0% | 46.9% / 82.3% |
-| kmrl-copilot round 1 | 90.7% | 91.8% / 91.8% | 88.0% | 88.1% / 94.7% |
-| **kmrl-copilot round 2** | **97.7%** | **100% / 98.0%** | **100%** | **98.7% / 97.6%** |
+| kmrl-logreader round 1 | 90.7% | 91.8% / 91.8% | 88.0% | 88.1% / 94.7% |
+| **kmrl-logreader round 2** | **97.7%** | **100% / 98.0%** | **100%** | **98.7% / 97.6%** |
 | Gemini (cloud edition, reference) | 100% | 100% / 100% | 100% | not run |
 
 Fine-tuning is what makes the difference: the same 0.5B model goes from 4.7% to 97.7%, and it beats a general

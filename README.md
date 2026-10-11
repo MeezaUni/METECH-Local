@@ -47,13 +47,13 @@ model yourself (below).
 
 ## The on-device model
 
-**kmrl-copilot**: Qwen2.5-0.5B-Instruct fine-tuned with LoRA on 9,199 examples (8,000 synthetic depot
+**kmrl-logreader**: Qwen2.5-0.5B-Instruct fine-tuned with LoRA on 9,199 examples (8,000 synthetic depot
 messages plus 1,199 natural rewrites from a larger local teacher model). It reads; code calculates: expiry
 phrases like "for 6 months" are copied as written and turned into dates by tested code.
 
 Hand-written real-world test set (43 logbook messages, 25 questions), scored as the supervisor sees it:
 
-| | Rule engine | **kmrl-copilot** | Gemini (cloud edition) |
+| | Rule engine | **kmrl-logreader** | Gemini (cloud edition) |
 |---|---|---|---|
 | Logbook messages fully correct | 76.7% | **97.7%** | 100% |
 | Of the updates it suggests, correct | 97.4% | **100%** | 100% |
@@ -73,7 +73,7 @@ or step by step from `backend/` (any OS):
 ```bash
 uv sync --group train
 uv run python ../ml/generate_dataset.py     # includes the committed teacher rewrites
-uv run python ../ml/train.py                # writes backend/models/kmrl-copilot
+uv run python ../ml/train.py                # writes backend/models/kmrl-logreader
 uv run python ../ml/evaluate.py --engine model
 ```
 
@@ -86,7 +86,7 @@ Optional, in `backend/.env` (see `.env.example`):
 
 | Setting | |
 |---|---|
-| `KMRL_LOCAL_ENGINE=trained` | the fine-tuned copilot (default) |
+| `KMRL_LOCAL_ENGINE=trained` | the fine-tuned kmrl-logreader model (default) |
 | `KMRL_LOCAL_ENGINE=ollama` | a general LLM from a local Ollama install instead, e.g. `OLLAMA_MODEL=qwen3:14b` |
 | `KMRL_MODEL_DEVICE=cpu` | force CPU inference |
 
