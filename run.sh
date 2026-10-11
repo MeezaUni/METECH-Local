@@ -14,10 +14,10 @@ fi
 (cd frontend && { [ -d node_modules ] || npm ci; } && npm run build)
 cd backend
 echo "Installing Python packages (the first run downloads PyTorch)..."
-uv sync
+uv sync --inexact
 if [ ! -f models/kmrl-copilot/config.json ]; then
   uv run python scripts/get_model.py || echo "  Continuing with the built-in rule engine. See README to train the model yourself."
 fi
 echo; echo "  METECH Local is running at http://127.0.0.1:8020   (Ctrl+C to stop)"; echo
-( sleep 5; (command -v xdg-open >/dev/null && xdg-open http://127.0.0.1:8020) || (command -v open >/dev/null && open http://127.0.0.1:8020) || true ) &
+[ -n "${KMRL_NO_BROWSER:-}" ] || ( sleep 5; (command -v xdg-open >/dev/null && xdg-open http://127.0.0.1:8020) || (command -v open >/dev/null && open http://127.0.0.1:8020) || true ) &
 exec uv run uvicorn app.main:app --host 127.0.0.1 --port 8020
