@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT.parent / "backend"))
 from app.ai import rules  # noqa: E402
 from app.ai.local_format import ask_messages, load_json, parse_messages  # noqa: E402
+from app.priority import apply_policy  # noqa: E402
 
 DEFAULTS = {"expiring_certificates": {"days": 7}, "highest_wear": {"limit": 5}}
 
@@ -97,6 +98,21 @@ class ModelEngine:
 
 
 # ------------------------------------------------------------------ scoring
+def with_policy(rows: list[dict], preds: list[object]) -> list[object]:
+    """Apply the depot priority policy exactly as the backend does before showing updates."""
+    out = []
+    for r, p in zip(rows, preds):
+        if r["task"] != "parse" or p is None:
+            out.append(p)
+            continue
+        out.append([
+            {**u, "priority": apply_policy(u.get("description") or "", u.get("source_text"), u.get("priority"))[0]}
+            if u.get("action") == "open_job_card" else u
+            for u in p
+        ])
+    return out
+
+
 def fact_key(u: dict, strict: bool) -> tuple:
     if u.get("action") == "close_job_card":
         return ("close_job_card", u.get("job_card_id"))   # the job card id decides the train
@@ -158,12 +174,14 @@ def main() -> None:
     for name, rows in load_sets().items():
         t0 = time.perf_counter()
         preds = engine.run(rows)
-        s = score(rows, preds)
+        raw = score(rows, preds)
+        s = score(rows, with_policy(rows, preds))   # what the supervisor actually sees
+        s["raw_parse_exact_rate"] = raw["parse_exact_rate"]
         s["seconds"] = round(time.perf_counter() - t0, 1)
         report[name] = s
         print(f"\n== {engine.name} on {name} set ({s['parse_n']} logbook, {s['ask_n']} questions, {s['seconds']}s)")
-        print(f"  logbook  valid JSON {s['parse_valid_rate']:.1%}   exact {s['parse_exact_rate']:.1%}   "
-              f"exact ignoring priority {s['parse_exact_relaxed_rate']:.1%}")
+        print(f"  logbook  valid JSON {s['parse_valid_rate']:.1%}   exact {s['parse_exact_rate']:.1%} "
+              f"(raw engine {raw['parse_exact_rate']:.1%})   exact ignoring priority {s['parse_exact_relaxed_rate']:.1%}")
         print(f"           fact precision {s['fact_precision']:.1%}  recall {s['fact_recall']:.1%}  F1 {s['fact_f1']:.1%}")
         print(f"  questions exact {s['ask_exact_rate']:.1%}")
     out = ROOT / "reports"

@@ -11,6 +11,7 @@ construction. Diversity comes from many templates x many surface forms x noise.
 
     uv run python ../ml/generate_dataset.py            # from backend/
     -> ml/data/train.jsonl, ml/data/val.jsonl
+       (plus teacher rewrites from ml/data/paraphrased.jsonl when paraphrase.py has been run)
 """
 from __future__ import annotations
 
@@ -19,12 +20,14 @@ import calendar
 import json
 import random
 import sys
+import zlib
 from datetime import date, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT.parent / "backend"))
 from app.ai.local_format import ask_messages, dump_intent, dump_updates, parse_messages  # noqa: E402
+from app.priority import apply_policy  # noqa: E402
 
 FLEET_MAX = 40  # trained on up to 40 sets: KMRL's fleet is growing past today's 25
 
@@ -70,7 +73,9 @@ def render_expiry(today: date, rng: random.Random) -> tuple[str, date]:
     """Return (phrase, resolved date). Mix of absolute and relative forms."""
     kind = rng.random()
     if kind < 0.28:  # relative
-        choice = rng.choice(["months", "year", "days", "weeks"])
+        choice = rng.choice(["months", "year", "days", "weeks", "fortnight"])
+        if choice == "fortnight":
+            return rng.choice(["for a fortnight", "for one fortnight", "for another fortnight"]), today + timedelta(days=14)
         if choice == "months":
             n = rng.choice([1, 2, 3, 6, 6, 9, 12])
             word = rng.choice([str(n), {1: "one", 2: "two", 3: "three", 6: "six", 12: "twelve"}.get(n, str(n))])
@@ -112,17 +117,23 @@ DEFECTS = {
         "door obstruction detection not working", "smoke from under-frame", "emergency brake not releasing",
         "ATP failure", "brake failure on car 3", "axle bearing overheating", "wheel flange damage",
         "door opening on wrong side", "parking brake stuck applied", "fire alarm triggered in car 1",
+        "brake pads worn out", "abnormal vibration from the bogie", "burning smell from car 2", "sparks seen at the collector",
+        "door opened while running", "suspension air bag deflated",
     ],
     "High": [
         "HVAC not cooling in car 2", "PIS display dead", "CCTV offline in car 3", "door 3 not closing",
         "pantograph uplift pressure low", "traction motor overheating", "radio not working", "headlight not working",
         "saloon AC tripping", "PA announcements not audible", "door 2 failed to open", "auxiliary converter fault",
+        "CCTV feed lost in car 1", "cab camera offline", "destination board not updating", "PIS screen not working",
+        "no cooling in car 3", "AC not working in car 4", "door 1 stuck closed", "intercom not working", "head lamp fused",
     ],
     "Routine": [
         "door 3 slow to close", "saloon light flickering", "seat panel damaged", "grab pole loose",
         "minor HVAC noise", "wiper blade worn", "floor mat torn", "window glass scratched",
         "announcement volume low", "route map sticker peeling", "handrail cover loose", "cab seat adjuster stiff",
         "interior panel rattling", "LED strip partly off in car 4",
+        "door 2 slow to open", "seat cushion torn", "door window glass scratched", "AC making a humming noise",
+        "minor rattle in car 2", "floor tile chipped", "cracked window pane in car 3",
     ],
 }
 FIXED_PHRASES = ["fixed", "rectified", "attended", "repaired", "sorted", "replaced", "done"]
@@ -202,6 +213,12 @@ def fact_renew(n: int, today: date, rng: random.Random) -> tuple[str, list[dict]
 
 
 def fact_close(n: int, today: date, rng: random.Random) -> tuple[str, list[dict], list[str]]:
+    if rng.random() < 0.15:  # several job cards closed in one sentence
+        ids = rng.sample(range(1001, 1251), rng.choice([2, 2, 3]))
+        refs = [rng.choice([f"JC {i}", f"job card {i}", f"WO {i}", f"#{i}"]) for i in ids]
+        listed = ", ".join(refs[:-1]) + rng.choice([" and ", " & ", ", "]) + refs[-1]
+        text = rng.choice([f"{listed} closed", f"Closed {listed}", f"{listed} all completed", f"{listed} both closed" if len(ids) == 2 else f"{listed} all closed"])
+        return text, [{"train_name": "", "action": "close_job_card", "job_card_id": i} for i in ids], refs
     jid = rng.randint(1001, 1250)
     jc = rng.choice([f"job card #{jid}", f"JC {jid}", f"JC#{jid}", f"job card {jid}", f"work order {jid}", f"WO-{jid}", f"job {jid}", f"JC-{jid}"])
     with_train = rng.random() < 0.65
@@ -232,9 +249,9 @@ def fact_open(n: int, today: date, rng: random.Random) -> tuple[str, list[dict],
     explicit = ""
     r = rng.random()
     if r < 0.12:
-        explicit, priority = rng.choice([" - urgent", ", critical", " URGENT", ", safety issue"]), "Critical"
-    elif r < 0.18 and priority != "Critical":
-        explicit, priority = rng.choice([" (minor)", ", low priority", " - not urgent"]), "Routine"
+        explicit = rng.choice([" - urgent", ", critical", " URGENT", ", safety issue", ", withdraw immediately"])
+    elif r < 0.20:
+        explicit = rng.choice([" (minor)", ", low priority", " - not urgent", ", raise routine JC", " - minor issue", " (cosmetic)"])
     text = rng.choice([
         f"{tr} {defect}{explicit}",
         f"{defect} on {tr}{explicit}",
@@ -247,7 +264,10 @@ def fact_open(n: int, today: date, rng: random.Random) -> tuple[str, list[dict],
         f"Defect: {tr} {defect}{explicit}",
     ])
     desc = defect[0].upper() + defect[1:]
-    return text, [{"train_name": tname(n), "action": "open_job_card", "description": desc, "priority": priority}], [tr, defect]
+    # The depot policy (app/priority.py) labels priority, exactly as the backend applies it.
+    priority = apply_policy(desc, text, priority)[0]
+    # Urgency words are protected from the typo noise so the text keeps saying what the label means.
+    return text, [{"train_name": tname(n), "action": "open_job_card", "description": desc, "priority": priority}], [tr, defect, *explicit.strip(" ,-()").split()]
 
 
 def fact_flag_clean(n: int, today: date, rng: random.Random) -> tuple[str, list[dict], list[str]]:
@@ -374,25 +394,35 @@ def ask_example(rng: random.Random) -> dict:
         out["train_name"] = tname(n)
         q = rng.choice([
             f"Tell me about {tr}", f"status of {tr}", f"{tr} details", f"what's up with {tr}", f"give me info on {tr}",
-            f"{tr}?", f"show {tr}", f"how is {tr} doing",
+            f"{tr}?", f"show {tr}", f"how is {tr} doing", f"anything wrong with {tr}?", f"issues with {tr}",
         ] if intent == "train_detail" else [
             f"Why is {tr} on standby?", f"why was {tr} sent to IBL", f"reason {tr} is held", f"explain {tr}'s assignment",
             f"why isn't {tr} in service", f"why is {tr} going for cleaning", f"why did the planner pick {tr}", f"how come {tr} is not running",
         ])
     elif intent == "expiring_certificates":
-        days = rng.choice([3, 5, 7, 10, 14, 15, 30])
-        weekly = rng.random() < 0.3
-        out["days"] = 7 if weekly else days
-        q = rng.choice(["certs expiring this week", "any fitness certificates due this week", "certificates expiring within a week"]) if weekly else rng.choice([
-            f"Which certificates expire in {days} days?", f"certs expiring in next {days} days", f"fitness certificates due within {days} days",
-            f"upcoming cert expiries within {days} days", f"any FC expiring in {days} days",
-        ])
+        days = rng.choice([3, 5, 7, 10, 14, 15, 21, 30])
+        mode = rng.choices(["days", "week", "fortnight", "soon"], [60, 15, 15, 10])[0]
+        out["days"] = {"days": days, "week": 7, "fortnight": 14, "soon": 7}[mode]
+        cert = rng.choice(["certificates", "certs", "fitness certificates", "FCs"])
+        verb = rng.choice(["expire", "lapse", "run out", "are due"])
+        if mode == "week":
+            q = rng.choice([f"{cert} expiring this week", f"any {cert} due this week", f"{cert} that {verb} within a week"])
+        elif mode == "fortnight":
+            q = rng.choice([f"which {cert} {verb} in the next fortnight", f"{cert} expiring within a fortnight", f"any {cert} running out this fortnight"])
+        elif mode == "soon":
+            q = rng.choice([f"any {cert} expiring soon?", f"which {cert} {verb} soon", f"{cert} about to lapse"])
+        else:
+            q = rng.choice([
+                f"Which {cert} {verb} in {days} days?", f"{cert} expiring in next {days} days", f"{cert} due within {days} days",
+                f"upcoming cert expiries within {days} days", f"any {cert} that {verb} in the coming {days} days",
+            ])
     elif intent == "open_jobs":
         pr = rng.choice([None, None, "Critical", "High", "Routine"])
         if pr:
             out["priority"] = pr
         p = pr.lower() + " " if pr else ""
-        q = rng.choice([f"show open {p}job cards", f"open {p}jobs", f"pending {p}work orders", f"any {p}defects pending", f"list open {p}JCs", f"what {p}maintenance is pending"])
+        q = rng.choice([f"show open {p}job cards", f"open {p}jobs", f"pending {p}work orders", f"any {p}defects pending",
+                        f"list open {p}JCs", f"what {p}maintenance is pending", f"outstanding {p}work", f"{p}jobs still open"])
     elif intent == "branding_status":
         q = rng.choice(["How are the branding contracts doing?", "advertising exposure status", "which ads are behind", "branding SLA report",
                         "are we meeting advertiser hours", "wrap contract status"])
@@ -434,7 +464,22 @@ def main() -> None:
 
     out = ROOT / "data"
     out.mkdir(exist_ok=True)
-    for name, rows in (("train", build(args.train_parse, args.train_ask, seed=1)), ("val", build(args.val_parse, args.val_ask, seed=99))):
+    sets = {"train": build(args.train_parse, args.train_ask, seed=1), "val": build(args.val_parse, args.val_ask, seed=99)}
+
+    # Teacher rewrites from paraphrase.py, if present. Split by base message so rewrites of one
+    # message never land in both train and val.
+    teacher = out / "paraphrased.jsonl"
+    if teacher.exists():
+        added = {"train": 0, "val": 0}
+        for line in open(teacher, encoding="utf-8"):
+            r = json.loads(line)
+            split = "val" if zlib.crc32(r["base_id"].encode()) % 10 == 0 else "train"
+            sets[split].append({"messages": r["messages"], "target": r["target"], "task": r["task"]})
+            added[split] += 1
+        random.Random(5).shuffle(sets["train"])
+        print(f"teacher rewrites added: {added['train']} train, {added['val']} val")
+
+    for name, rows in sets.items():
         with open(out / f"{name}.jsonl", "w", encoding="utf-8") as f:
             for r in rows:
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")

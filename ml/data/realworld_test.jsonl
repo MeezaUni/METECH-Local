@@ -33,6 +33,14 @@
 {"task": "parse", "today": "2026-10-11", "text": "Mileage TS-16: 2100 km since inspection", "expected": [{"train_name": "KMRL-TS-016", "action": "update_mileage", "km": 2100}]}
 {"task": "parse", "today": "2026-10-11", "text": "Please note TS-08 and TS-10 were deep cleaned tonight", "expected": [{"train_name": "KMRL-TS-008", "action": "mark_cleaned"}, {"train_name": "KMRL-TS-010", "action": "mark_cleaned"}]}
 {"task": "parse", "today": "2026-10-11", "text": "JC 1072 HVAC leak fixed on TS-02", "expected": [{"train_name": "KMRL-TS-002", "action": "close_job_card", "job_card_id": 1072}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS-03 CCTV camera dead in car 4", "expected": [{"train_name": "KMRL-TS-003", "action": "open_job_card", "priority": "High"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Brake pad on TS-14 car 2 worn out", "expected": [{"train_name": "KMRL-TS-014", "action": "open_job_card", "priority": "Critical"}]}
+{"task": "parse", "today": "2026-10-11", "text": "closed wo 1080", "expected": [{"train_name": "", "action": "close_job_card", "job_card_id": 1080}]}
+{"task": "parse", "today": "2026-10-11", "text": "JC 1074 and JC 1075 both closed", "expected": [{"train_name": "", "action": "close_job_card", "job_card_id": 1074}, {"train_name": "", "action": "close_job_card", "job_card_id": 1075}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS-22 signalling certificate renewed for a fortnight", "expected": [{"train_name": "KMRL-TS-022", "action": "renew_certificate", "department": "Signalling", "date": "2026-10-25"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Train 12 HVAC tripping repeatedly, minor issue", "expected": [{"train_name": "KMRL-TS-012", "action": "open_job_card", "priority": "Routine"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Burning smell reported in TS-18 car 3", "expected": [{"train_name": "KMRL-TS-018", "action": "open_job_card", "priority": "Critical"}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS-25 window glass cracked in car 1", "expected": [{"train_name": "KMRL-TS-025", "action": "open_job_card", "priority": "Routine"}]}
 {"task": "ask", "question": "how many rakes are running tomorrow", "expected": {"intent": "count", "status": "Service"}}
 {"task": "ask", "question": "list unfit trains", "expected": {"intent": "list", "status": "Unfit"}}
 {"task": "ask", "question": "why is TS 9 not in service?", "expected": {"intent": "explain_assignment", "train_name": "KMRL-TS-009"}}
@@ -53,3 +61,8 @@
 {"task": "ask", "question": "status of TS-21", "expected": {"intent": "train_detail", "train_name": "KMRL-TS-021"}}
 {"task": "ask", "question": "hi", "expected": {"intent": "help"}}
 {"task": "ask", "question": "number of trains with warnings", "expected": {"intent": "count", "status": "Warning"}}
+{"task": "ask", "question": "which certs lapse in the next fortnight", "expected": {"intent": "expiring_certificates", "days": 14}}
+{"task": "ask", "question": "any certificates running out within a fortnight?", "expected": {"intent": "expiring_certificates", "days": 14}}
+{"task": "ask", "question": "how many trains are going for cleaning tonight?", "expected": {"intent": "count", "status": "Cleaning"}}
+{"task": "ask", "question": "what's wrong with TS-19", "expected": {"intent": "train_detail", "train_name": "KMRL-TS-019"}}
+{"task": "ask", "question": "show me pending critical work", "expected": {"intent": "open_jobs", "priority": "Critical"}}

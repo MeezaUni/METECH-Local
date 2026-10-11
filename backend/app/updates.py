@@ -5,6 +5,7 @@ import re
 from datetime import date
 
 from .models import DEPARTMENTS, Certificate, Fleet, FleetUpdate, JobCard
+from .priority import apply_policy
 
 _TRAIN_NUM = re.compile(r"(\d{1,3})\s*$")
 
@@ -51,6 +52,11 @@ def validate_updates(updates: list[FleetUpdate], fleet: Fleet, today: date) -> t
         if problem:
             warnings.append(f"Skipped {name} {u.action.replace('_', ' ')}: {problem}")
             continue
+        if u.action == "open_job_card":
+            # The engine reads the defect; the depot policy decides how urgent it is (app/priority.py).
+            u.priority, note = apply_policy(u.description or "", u.source_text, u.priority)
+            if note:
+                warnings.append(f"{name}: {note}")
         valid.append(u)
     return valid, warnings
 
