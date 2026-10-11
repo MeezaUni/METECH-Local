@@ -72,11 +72,21 @@ def ground_and_resolve(updates: list[dict], text: str, today: date) -> tuple[lis
     """
     from .rules import find_date   # local import: rules imports models, keep this module light
 
+    from typing import get_args
+
+    from ..models import UpdateAction
+
+    actions = set(get_args(UpdateAction))
     numbers = {int(n.replace(",", "")) for n in _NUMBER.findall(text)}
     norm_text = _norm(text)
     kept, dropped = [], []
     for u in updates:
+        if not isinstance(u, dict):
+            continue
         u = dict(u)
+        if u.get("action") not in actions:   # e.g. an invented "reprofiling_done"
+            dropped.append(f"Ignored a suggestion with an unknown action '{u.get('action')}'")
+            continue
         name = u.get("train_name") or ""
         problems = []
         if name[-3:].isdigit() and int(name[-3:]) not in numbers:

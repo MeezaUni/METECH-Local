@@ -45,6 +45,17 @@ def test_grounding_blocks_invented_updates():
     assert len(dropped) == 3 and any("for 6 months" in d for d in dropped)
 
 
+def test_one_bad_suggestion_does_not_sink_the_rest():
+    """Round 2's only real-world miss: an invented action next to a correct renewal."""
+    text = "TS-11 wheel reprofiling done, JC 1070 closed. TS 05 telecom FC received, valid till 10/10/2027."
+    kept, dropped = ground_and_resolve([
+        {"train_name": "KMRL-TS-005", "action": "renew_certificate", "department": "Telecom", "date_text": "10/10/2027"},
+        {"train_name": "KMRL-TS-011", "action": "reprofiling_done"},
+    ], text, TODAY)
+    assert [u["action"] for u in kept] == ["renew_certificate"] and kept[0]["date"] == "2027-10-10"
+    assert dropped == ["Ignored a suggestion with an unknown action 'reprofiling_done'"]
+
+
 def test_expiry_phrase_is_resolved_by_code():
     text = "TS-10 Telecom and Signalling certificates renewed for 6 months"
     kept, _ = ground_and_resolve(

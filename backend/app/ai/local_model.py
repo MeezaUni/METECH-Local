@@ -76,7 +76,7 @@ class LocalModelProvider:
         inputs = self._tok(prompt, return_tensors="pt").to(self.device)
         with self._lock, torch.inference_mode():
             out = self._model.generate(
-                **inputs, max_new_tokens=max_new_tokens, do_sample=False,
+                **inputs, max_new_tokens=max_new_tokens, do_sample=False, repetition_penalty=1.0,   # JSON repeats keys by design
                 pad_token_id=self._tok.pad_token_id or self._tok.eos_token_id,
             )
         return self._tok.decode(out[0, inputs["input_ids"].shape[1]:], skip_special_tokens=True)
@@ -86,10 +86,17 @@ class LocalModelProvider:
         try:
             proposed = [{"train_name": "", **u} for u in load_json(raw).get("updates", [])]   # closures may not name a train
             kept, dropped = ground_and_resolve(proposed, text, ctx.today)
-            _warnings.items = dropped
-            return [FleetUpdate.model_validate(u) for u in kept]
         except (ValueError, TypeError, AttributeError) as exc:
             raise AIUnavailable(f"model output was not valid: {exc}") from exc
+        # Validate one by one: a single malformed suggestion must not throw away the good ones.
+        updates = []
+        for u in kept:
+            try:
+                updates.append(FleetUpdate.model_validate(u))
+            except ValueError:
+                dropped.append(f"Ignored a malformed {u.get('action', 'update')} suggestion")
+        _warnings.items = dropped
+        return updates
 
     def take_warnings(self) -> list[str]:
         """Notes from the last parse on this thread (suggestions dropped by the grounding check)."""

@@ -112,6 +112,10 @@ def eval_loss(model, examples: list[dict], pad_id: int, device: str, size: int) 
 def export(model, tok, out: Path, meta: dict) -> None:
     """Merge the LoRA adapter into the base weights and save one plain, offline-loadable model."""
     merged = model.merge_and_unload().to(torch.bfloat16)
+    # The base model ships chat-sampling defaults (temperature, top_p, repetition_penalty 1.1). The copilot
+    # emits JSON, which repeats keys by design, so save plain deterministic decoding as the default.
+    gc = merged.generation_config
+    gc.do_sample, gc.repetition_penalty, gc.temperature, gc.top_p, gc.top_k = False, 1.0, None, None, None
     out.mkdir(parents=True, exist_ok=True)
     merged.save_pretrained(out, safe_serialization=True)
     tok.save_pretrained(out)
