@@ -1,24 +1,51 @@
 @echo off
-rem KMRL Depot Planner - fully local AI edition. Serves everything on http://127.0.0.1:8020
+rem METECH Local - KMRL Depot Planner with an on-device AI model. Serves http://127.0.0.1:8020
 setlocal
 cd /d "%~dp0"
-where uv >nul 2>nul || (echo [!] uv is required: https://docs.astral.sh/uv/getting-started/installation/ & exit /b 1)
-where npm >nul 2>nul || (echo [!] Node.js is required: https://nodejs.org/ & exit /b 1)
+title METECH Local - KMRL Depot Planner
 
+rem ---- prerequisites -------------------------------------------------------
+where npm >nul 2>nul
+if errorlevel 1 (
+  echo [!] Node.js 20 or newer is required. Install it from https://nodejs.org/ and run this again.
+  pause & exit /b 1
+)
+where uv >nul 2>nul
+if errorlevel 1 (
+  echo uv ^(the Python package manager^) is not installed.
+  choice /c YN /m "Install uv now from https://astral.sh/uv"
+  if errorlevel 2 ( echo Install it from https://docs.astral.sh/uv/ and run this again. & pause & exit /b 1 )
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://astral.sh/uv/install.ps1 | iex"
+  set "PATH=%USERPROFILE%\.local\bin;%PATH%"
+)
+where uv >nul 2>nul || ( echo [!] uv is still not available. Open a new terminal and run this again. & pause & exit /b 1 )
+
+rem ---- build ----------------------------------------------------------------
 pushd frontend
-if not exist node_modules call npm install || exit /b 1
-call npm run build || exit /b 1
+if not exist node_modules ( call npm ci || ( popd & pause & exit /b 1 ) )
+call npm run build || ( popd & pause & exit /b 1 )
 popd
 
 pushd backend
-uv sync || exit /b 1
-if not exist models\kmrl-copilot\config.json (
-  echo.
-  echo   [!] No trained model found in backend\models\kmrl-copilot.
-  echo       Run train.bat once ^(about 15 minutes on an RTX 4060^). Until then the rule engine is used.
-)
+echo Installing Python packages (the first run downloads PyTorch, about 3 GB)...
+uv sync || ( popd & pause & exit /b 1 )
+
+rem ---- the trained model (downloaded once) ----------------------------------
+if not exist models\kmrl-copilot\config.json call :get_model
+
 echo.
-echo   KMRL Depot Planner (local AI) on http://127.0.0.1:8020
+echo   METECH Local is running at http://127.0.0.1:8020   (close this window to stop)
 echo.
 start "" http://127.0.0.1:8020
 uv run uvicorn app.main:app --host 127.0.0.1 --port 8020
+popd
+exit /b
+
+:get_model
+uv run python scripts\get_model.py
+if errorlevel 1 (
+  echo.
+  echo   Continuing with the built-in rule engine. Run train.bat to train the model yourself.
+  echo.
+)
+exit /b
