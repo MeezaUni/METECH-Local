@@ -3,7 +3,7 @@
     cd backend
     uv sync --group train
     uv run python ../ml/generate_dataset.py
-    uv run python ../ml/train.py              # ~10-15 min on an RTX 4060 (8 GB)
+    uv run python ../ml/train.py              # ~30-40 min on an RTX 4060 laptop GPU (8 GB)
     uv run python ../ml/evaluate.py --engine model
 
 Base model: Qwen2.5-0.5B-Instruct (Apache-2.0). It is downloaded once from the
@@ -67,6 +67,20 @@ def collate(examples: list[dict], pad_id: int, device: str) -> dict:
     return {"input_ids": ids.to(device), "labels": labels.to(device), "attention_mask": mask.to(device)}
 
 
+def answer_loss(model, batch: dict) -> torch.Tensor:
+    """Cross-entropy on the answer tokens only.
+
+    Equivalent to the model's own loss, but the vocabulary projection (151k logits per token, in fp32)
+    runs only where labels exist instead of over the whole prompt. That tensor is what overflows 8 GB.
+    """
+    base = model.get_base_model()                      # LoRA layers are injected in place, so they still apply
+    hidden = base.model(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).last_hidden_state
+    labels = batch["labels"][:, 1:]
+    keep = labels != -100
+    logits = base.lm_head(hidden[:, :-1][keep]).float()
+    return torch.nn.functional.cross_entropy(logits, labels[keep])
+
+
 @torch.no_grad()
 def eval_loss(model, examples: list[dict], pad_id: int, device: str, size: int) -> float:
     model.eval()
@@ -74,7 +88,7 @@ def eval_loss(model, examples: list[dict], pad_id: int, device: str, size: int) 
     for group in batches(examples, size, random.Random(0), shuffle=False):
         batch = collate([examples[i] for i in group], pad_id, device)
         with torch.autocast("cuda", dtype=torch.bfloat16, enabled=device == "cuda"):
-            total += model(**batch).loss.item() * len(group)
+            total += answer_loss(model, batch).item() * len(group)
         count += len(group)
     model.train()
     return total / max(1, count)
@@ -85,8 +99,9 @@ def main() -> None:
     ap.add_argument("--base", default="Qwen/Qwen2.5-0.5B-Instruct")
     ap.add_argument("--epochs", type=float, default=2)
     ap.add_argument("--lr", type=float, default=2e-4)
-    ap.add_argument("--batch", type=int, default=8)
-    ap.add_argument("--accum", type=int, default=2)
+    ap.add_argument("--batch", type=int, default=4)
+    ap.add_argument("--accum", type=int, default=4)
+    ap.add_argument("--no-grad-checkpointing", action="store_true", help="faster, but needs more than 8 GB of VRAM")
     ap.add_argument("--max-len", type=int, default=640)
     ap.add_argument("--lora-r", type=int, default=32)
     ap.add_argument("--out", type=Path, default=ROOT.parent / "backend" / "models" / "kmrl-copilot")
@@ -108,6 +123,10 @@ def main() -> None:
           f"(dropped {len(rows['train']) - len(data['train'])} over {args.max_len} tokens)")
 
     model = AutoModelForCausalLM.from_pretrained(args.base, dtype=torch.bfloat16 if device == "cuda" else torch.float32).to(device)
+    if not args.no_grad_checkpointing:
+        # Recompute activations in the backward pass: the 151k-token vocabulary makes them large on an 8 GB card.
+        model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+        model.enable_input_require_grads()
     model = get_peft_model(model, LoraConfig(
         task_type="CAUSAL_LM", r=args.lora_r, lora_alpha=2 * args.lora_r, lora_dropout=0.05,
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
@@ -134,7 +153,7 @@ def main() -> None:
         for group in batches(data["train"], args.batch, rng):
             batch = collate([data["train"][i] for i in group], tok.pad_token_id, device)
             with torch.autocast("cuda", dtype=torch.bfloat16, enabled=device == "cuda"):
-                loss = model(**batch).loss / args.accum
+                loss = answer_loss(model, batch) / args.accum
             loss.backward()
             running += loss.item()
             micro += 1
@@ -145,8 +164,11 @@ def main() -> None:
             step += 1
             if step % 25 == 0 or step == 1:
                 elapsed = time.perf_counter() - started
+                peak = torch.cuda.max_memory_allocated() / 2**30 if device == "cuda" else 0
                 print(f"step {step:>4}/{total_steps}  loss {running / (25 if step > 1 else 1):.4f}  "
-                      f"lr {sched.get_last_lr()[0]:.2e}  {elapsed / 60:.1f} min", flush=True)
+                      f"lr {sched.get_last_lr()[0]:.2e}  peak {peak:.1f} GB  {elapsed / 60:.1f} min", flush=True)
+                if device == "cuda":
+                    torch.cuda.reset_peak_memory_stats()
                 history.append({"step": step, "loss": running / (25 if step > 1 else 1)})
                 running = 0.0
             if step >= total_steps:

@@ -81,7 +81,7 @@ class LocalModelProvider:
         return self._tok.decode(out[0, inputs["input_ids"].shape[1]:], skip_special_tokens=True)
 
     def parse_logbook(self, text: str, ctx: AIContext) -> list[FleetUpdate]:
-        raw = self._generate(parse_messages(text, ctx.today), max_new_tokens=160 + 4 * len(text))
+        raw = self._generate(parse_messages(text, ctx.today), max_new_tokens=min(1024, 160 + 4 * len(text)))
         try:
             data = load_json(raw)
             updates = []

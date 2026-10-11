@@ -171,9 +171,8 @@ export default function App() {
             {TABS.map(([key, label]) => (
               <button key={key} role="tab" className="tab" aria-selected={tab === key} onClick={() => setTab(key)}>
                 {label}
-                {key === 'fleet' && <span className="tab__count">{fleet.trains.length}</span>}
+                {key === 'fleet' && <span className="tab__count">{fleet.trains.length} trains, {openJobs} open jobs</span>}
                 {key === 'plan' && changes.length > 0 && <span className="tab__count">{changes.length} changed</span>}
-                {key === 'history' && <span className="tab__count">{openJobs} open jobs</span>}
               </button>
             ))}
           </nav>
