@@ -8,7 +8,7 @@ protected string (train, job card, date, km, department, urgency word) or invent
 number is rejected. So the data gets more natural without getting less correct.
 
     cd backend
-    uv run python ../ml/paraphrase.py                      # ~45 min with qwen3.5 on an RTX 4060
+    uv run python ../ml/paraphrase.py                      # ~20-30 min with qwen3.5 on an RTX 4060
     uv run python ../ml/paraphrase.py --messages 20 --questions 10   # quick look first
     uv run python ../ml/generate_dataset.py                # merges data/paraphrased.jsonl into train/val
 
@@ -37,12 +37,15 @@ from app.ai.local_format import ask_messages, dump_updates, parse_messages  # no
 OUT = ROOT / "data" / "paraphrased.jsonl"
 
 SYSTEM = (
-    "You rewrite short messages written by staff at a Kochi Metro (KMRL) train depot. "
-    "Write it the way different real people would type it: WhatsApp style, terse shift-handover notes, "
-    "Indian English, sometimes a Malayalam word (kazhinju = finished, cheythu = done, sheri = ok), "
-    "abbreviations, missing punctuation. Keep the meaning exactly the same. "
-    "Copy every protected string character for character. Never add trains, numbers, dates or new facts. "
-    "Each rewrite is a single line."
+    "You rewrite short messages from staff at a Kochi Metro (KMRL) train depot so a model can learn the many ways "
+    "people phrase the same thing. Vary the English: word order, synonyms, terse or chatty, abbreviations "
+    "(cert, JC, AC, pls, thru), active or passive, Indian English. Keep the meaning exactly the same. "
+    "Copy every protected string character for character. Never add trains, numbers, dates, people or facts. "
+    "Do not add words from other languages. Each rewrite is one natural line a real person would send.\n"
+    "Examples of good rewrites:\n"
+    "  'TS-07 A-check completed' -> 'A-check on TS-07 is done' | 'finished the TS-07 A-check' | 'TS-07: A-check over, all ok'\n"
+    "  'Closed JC 1071' -> 'JC 1071 is closed now' | 'have closed out JC 1071' | 'JC 1071 done and closed'\n"
+    "  'Which trains are on standby?' -> 'which ones are on standby tonight' | 'list the trains on standby' | 'who is on standby?'"
 )
 SCHEMA = {
     "type": "object",
@@ -66,6 +69,10 @@ def ask_teacher(host: str, model: str, text: str, protect: list[str]) -> list[st
         return []
 
 
+FILLERS = re.compile(r"\b(kazhinju|cheythu|sheri|aanu|alle|undo|ketto)\b", re.I)
+REPEATED = re.compile(r"\b(\w+)\s+\1\b", re.I)
+
+
 def acceptable(variant: str, original: str, protect: list[str]) -> bool:
     v = variant.lower()
     return (
@@ -74,6 +81,8 @@ def acceptable(variant: str, original: str, protect: list[str]) -> bool:
         and all(p.lower() in v for p in protect if p)
         and set(DIGITS.findall(variant)) <= set(DIGITS.findall(original))   # no invented numbers
         and v.strip(" .") != original.lower().strip(" .")
+        and len(FILLERS.findall(variant)) <= len(FILLERS.findall(original))   # no code-mixing the original didn't have
+        and not REPEATED.search(variant)                                        # "sheri sheri", "the the"
     )
 
 
@@ -159,6 +168,13 @@ def main() -> None:
                 rate = stats["accepted"] / max(1, stats["proposed"])
                 print(f"{n}/{len(jobs)} items  {stats['rows']} new rows  {rate:.0%} of rewrites accepted  "
                       f"{stats['errors']} errors  {(time.perf_counter() - started) / 60:.1f} min", flush=True)
+    # Ollama keeps the teacher in VRAM for minutes after the last request; free it so training can start right away.
+    try:
+        unload = urllib.request.Request(f"{args.host}/api/generate", data=json.dumps({"model": args.model, "keep_alive": 0}).encode(),
+                                        headers={"Content-Type": "application/json"})
+        urllib.request.urlopen(unload, timeout=30).read()
+    except (urllib.error.URLError, TimeoutError):
+        print("note: could not unload the teacher; run `ollama stop` before training", file=sys.stderr)
     print(f"done: {stats['rows']} new rows in {args.out} ({stats['accepted']}/{stats['proposed']} rewrites accepted)")
 
 

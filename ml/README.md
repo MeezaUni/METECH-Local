@@ -11,7 +11,7 @@ Run everything with `train.bat` in the project root, or step by step from `backe
 
 ```bat
 uv sync --group train
-uv run python ..\ml\paraphrase.py              :: optional, ~45 min: teacher rewrites via local Ollama (qwen3.5)
+uv run python ..\ml\paraphrase.py              :: optional, ~20-30 min: teacher rewrites via local Ollama (qwen3.5)
 uv run python ..\ml\generate_dataset.py        :: 8,000 template examples (+ teacher rewrites if present)
 uv run python ..\ml\train.py                   :: LoRA fine-tune (~16 min), merge, save to backend\models\kmrl-copilot
 uv run python ..\ml\evaluate.py --engine rules :: baseline
