@@ -1,0 +1,55 @@
+{"task": "parse", "today": "2026-10-11", "text": "TS-11 wheel reprofiling done, JC 1070 closed. TS 05 telecom FC received, valid till 10/10/2027.", "expected": [{"train_name": "KMRL-TS-011", "action": "close_job_card", "job_card_id": 1070}, {"train_name": "KMRL-TS-005", "action": "renew_certificate", "department": "Telecom", "date": "2027-10-10"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Rake 14 got its rolling stock certificate today, valid for one year.", "expected": [{"train_name": "KMRL-TS-014", "action": "renew_certificate", "department": "Rolling-Stock", "date": "2027-10-11"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Train 21 cleaned fully. Train 3 also cleaned.", "expected": [{"train_name": "KMRL-TS-021", "action": "mark_cleaned"}, {"train_name": "KMRL-TS-003", "action": "mark_cleaned"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Coach 2 of TS 08 AC not working, passengers complaining", "expected": [{"train_name": "KMRL-TS-008", "action": "open_job_card", "priority": "High"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Inform IBL: TS-19 brake issue sorted, closing work order 1071", "expected": [{"train_name": "KMRL-TS-019", "action": "close_job_card", "job_card_id": 1071}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS-7 completed A check today morning", "expected": [{"train_name": "KMRL-TS-007", "action": "complete_maintenance"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Hello team, tomorrow's briefing at 9am", "expected": []}
+{"task": "parse", "today": "2026-10-11", "text": "TS-16 PIS screen blank in car 1", "expected": [{"train_name": "KMRL-TS-016", "action": "open_job_card", "priority": "High"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Odometer for TS-22 shows 4810 km after last inspection", "expected": [{"train_name": "KMRL-TS-022", "action": "update_mileage", "km": 4810}]}
+{"task": "parse", "today": "2026-10-11", "text": "Someone spilled juice all over TS-02, needs cleaning before service", "expected": [{"train_name": "KMRL-TS-002", "action": "flag_cleaning"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Signalling cert for TS-09 renewed until March 31, 2027", "expected": [{"train_name": "KMRL-TS-009", "action": "renew_certificate", "department": "Signalling", "date": "2027-03-31"}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS-12 pantograph strip replaced, JC 1077 closed. TS-12 also needs deep cleaning.", "expected": [{"train_name": "KMRL-TS-012", "action": "close_job_card", "job_card_id": 1077}, {"train_name": "KMRL-TS-012", "action": "flag_cleaning"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Driver of train 25 reports emergency brake not releasing at Aluva", "expected": [{"train_name": "KMRL-TS-025", "action": "open_job_card", "priority": "Critical"}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS-04 interior light flickering in car 3 (minor)", "expected": [{"train_name": "KMRL-TS-004", "action": "open_job_card", "priority": "Routine"}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS 17 deep clean finished, TS 18 inspection finished", "expected": [{"train_name": "KMRL-TS-017", "action": "mark_cleaned"}, {"train_name": "KMRL-TS-018", "action": "complete_maintenance"}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS-10 Telecom and Signalling certificates renewed for 6 months", "expected": [{"train_name": "KMRL-TS-010", "action": "renew_certificate", "department": "Telecom", "date": "2027-04-11"}, {"train_name": "KMRL-TS-010", "action": "renew_certificate", "department": "Signalling", "date": "2027-04-11"}]}
+{"task": "parse", "today": "2026-10-11", "text": "closed jc 1075", "expected": [{"train_name": "", "action": "close_job_card", "job_card_id": 1075}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS-23 seat torn in car 4, raise routine JC", "expected": [{"train_name": "KMRL-TS-023", "action": "open_job_card", "priority": "Routine"}]}
+{"task": "parse", "today": "2026-10-11", "text": "All good, no defects reported tonight", "expected": []}
+{"task": "parse", "today": "2026-10-11", "text": "TS-01 has done 5230 km since last A-check", "expected": [{"train_name": "KMRL-TS-001", "action": "update_mileage", "km": 5230}]}
+{"task": "parse", "today": "2026-10-11", "text": "Graffiti found on TS-06 exterior near Muttom", "expected": [{"train_name": "KMRL-TS-006", "action": "flag_cleaning"}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS-13 rolling stock fitness extended till 15 Jan 2027", "expected": [{"train_name": "KMRL-TS-013", "action": "renew_certificate", "department": "Rolling-Stock", "date": "2027-01-15"}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS-20 CCTV not recording in car 2", "expected": [{"train_name": "KMRL-TS-020", "action": "open_job_card", "priority": "High"}]}
+{"task": "parse", "today": "2026-10-11", "text": "B check of TS-24 over. TS-24 good to go", "expected": [{"train_name": "KMRL-TS-024", "action": "complete_maintenance"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Smoke smell reported from under TS-15 car 3, withdraw immediately", "expected": [{"train_name": "KMRL-TS-015", "action": "open_job_card", "priority": "Critical"}]}
+{"task": "parse", "today": "2026-10-11", "text": "work order 1080 for TS-03 done", "expected": [{"train_name": "KMRL-TS-003", "action": "close_job_card", "job_card_id": 1080}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS-18 cleaning kazhinju, TS-19 needs cleaning", "expected": [{"train_name": "KMRL-TS-018", "action": "mark_cleaned"}, {"train_name": "KMRL-TS-019", "action": "flag_cleaning"}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS 2 telecom certificate valid upto 2027-06-30", "expected": [{"train_name": "KMRL-TS-002", "action": "renew_certificate", "department": "Telecom", "date": "2027-06-30"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Door 4 on TS-09 opening slowly", "expected": [{"train_name": "KMRL-TS-009", "action": "open_job_card", "priority": "Routine"}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS-05 IBL inspection completed", "expected": [{"train_name": "KMRL-TS-005", "action": "complete_maintenance"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Received signalling FC for TS 14 till 20th November 2027", "expected": [{"train_name": "KMRL-TS-014", "action": "renew_certificate", "department": "Signalling", "date": "2027-11-20"}]}
+{"task": "parse", "today": "2026-10-11", "text": "TS-11 vibration noise from bogie, check urgently", "expected": [{"train_name": "KMRL-TS-011", "action": "open_job_card", "priority": "Critical"}]}
+{"task": "parse", "today": "2026-10-11", "text": "Mileage TS-16: 2100 km since inspection", "expected": [{"train_name": "KMRL-TS-016", "action": "update_mileage", "km": 2100}]}
+{"task": "parse", "today": "2026-10-11", "text": "Please note TS-08 and TS-10 were deep cleaned tonight", "expected": [{"train_name": "KMRL-TS-008", "action": "mark_cleaned"}, {"train_name": "KMRL-TS-010", "action": "mark_cleaned"}]}
+{"task": "parse", "today": "2026-10-11", "text": "JC 1072 HVAC leak fixed on TS-02", "expected": [{"train_name": "KMRL-TS-002", "action": "close_job_card", "job_card_id": 1072}]}
+{"task": "ask", "question": "how many rakes are running tomorrow", "expected": {"intent": "count", "status": "Service"}}
+{"task": "ask", "question": "list unfit trains", "expected": {"intent": "list", "status": "Unfit"}}
+{"task": "ask", "question": "why is TS 9 not in service?", "expected": {"intent": "explain_assignment", "train_name": "KMRL-TS-009"}}
+{"task": "ask", "question": "details of rake 14", "expected": {"intent": "train_detail", "train_name": "KMRL-TS-014"}}
+{"task": "ask", "question": "which certs are expiring in the next 14 days", "expected": {"intent": "expiring_certificates", "days": 14}}
+{"task": "ask", "question": "any critical defects open?", "expected": {"intent": "open_jobs", "priority": "Critical"}}
+{"task": "ask", "question": "how are our advertisers doing", "expected": {"intent": "branding_status"}}
+{"task": "ask", "question": "what does tomorrow's plan look like", "expected": {"intent": "plan_summary"}}
+{"task": "ask", "question": "top 3 trains with most km since last inspection", "expected": {"intent": "highest_wear", "limit": 3}}
+{"task": "ask", "question": "what's the weather", "expected": {"intent": "help"}}
+{"task": "ask", "question": "how many trains on standby", "expected": {"intent": "count", "status": "Standby"}}
+{"task": "ask", "question": "which trains are going to IBL tonight", "expected": {"intent": "list", "status": "Inspection Bay"}}
+{"task": "ask", "question": "explain why TS-05 is held", "expected": {"intent": "explain_assignment", "train_name": "KMRL-TS-005"}}
+{"task": "ask", "question": "how many green trains", "expected": {"intent": "count", "status": "Fit"}}
+{"task": "ask", "question": "show certificates expiring in 30 days", "expected": {"intent": "expiring_certificates", "days": 30}}
+{"task": "ask", "question": "pending high priority jobs", "expected": {"intent": "open_jobs", "priority": "High"}}
+{"task": "ask", "question": "which trains are being cleaned tonight", "expected": {"intent": "list", "status": "Cleaning"}}
+{"task": "ask", "question": "status of TS-21", "expected": {"intent": "train_detail", "train_name": "KMRL-TS-021"}}
+{"task": "ask", "question": "hi", "expected": {"intent": "help"}}
+{"task": "ask", "question": "number of trains with warnings", "expected": {"intent": "count", "status": "Warning"}}
