@@ -16,6 +16,9 @@ dependencies = [
 
 [dependency-groups]
 dev = ["pytest>=8", "httpx>=0.27"]
+report = [
+    "matplotlib>=3.11.2",
+]
 # Only needed to (re)train the model: uv sync --group train
 train = ["peft>=0.15", "accelerate>=1.6"]
 

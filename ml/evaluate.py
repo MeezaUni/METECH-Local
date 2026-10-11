@@ -1,7 +1,9 @@
 """Score an engine on the synthetic validation set and the hand-written real-world set.
 
     uv run python ../ml/evaluate.py --engine rules
-    uv run python ../ml/evaluate.py --engine model [--model-dir ../backend/models/kmrl-copilot]
+    uv run python ../ml/evaluate.py --engine model [--model-dir ../backend/models/kmrl-copilot] [--tag round2]
+    uv run python ../ml/evaluate.py --engine base     # Qwen2.5-0.5B-Instruct before fine-tuning (few-shot prompt)
+    uv run python ../ml/evaluate.py --engine ollama --sets realworld   # a general 10B model via Ollama, no fine-tuning
 
 Parse metrics compare the *facts* extracted (train, action, department, date,
 job card, km, priority); free-text fields (description, source_text) are not
@@ -60,7 +62,7 @@ class RulesEngine:
 
 
 class ModelEngine:
-    def __init__(self, model_dir: Path, batch: int = 16):
+    def __init__(self, model_dir: Path | str, batch: int = 16, name: str | None = None):
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -71,13 +73,13 @@ class ModelEngine:
         dtype = torch.bfloat16 if self.device == "cuda" else torch.float32
         self.model = AutoModelForCausalLM.from_pretrained(model_dir, dtype=dtype).to(self.device).eval()
         self.batch = batch
-        self.name = f"trained model ({model_dir.name}, {self.device})"
+        self.name = name or f"trained model ({Path(model_dir).name}, {self.device})"
+
+    def messages(self, r: dict) -> list[dict]:
+        return parse_messages(r["text"], date.fromisoformat(r["today"])) if r["task"] == "parse" else ask_messages(r["question"])
 
     def run(self, rows: list[dict]) -> list[object]:
-        prompts = []
-        for r in rows:
-            msgs = parse_messages(r["text"], date.fromisoformat(r["today"])) if r["task"] == "parse" else ask_messages(r["question"])
-            prompts.append(self.tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True))
+        prompts = [self.tok.apply_chat_template(self.messages(r), tokenize=False, add_generation_prompt=True) for r in rows]
         order = sorted(range(len(rows)), key=lambda i: len(prompts[i]))   # similar lengths batch better
         raw: dict[int, str] = {}
         for s in range(0, len(order), self.batch):
@@ -101,6 +103,91 @@ class ModelEngine:
                     out.append(data)
             except ValueError:
                 out.append(None)  # invalid JSON
+        return out
+
+
+BASE_PARSE_SYSTEM = """You extract fleet updates for the Kochi Metro (KMRL) train depot from logbook text.
+Reply with JSON only: {"updates": [ ... ]}. One object per fact, with these keys:
+- train_name: "KMRL-TS-NNN" (three digits). "train 4", "TS-04", "rake 4" all mean "KMRL-TS-004". "" if not stated.
+- action: one of renew_certificate, close_job_card, open_job_card, flag_cleaning, mark_cleaned, complete_maintenance, update_mileage
+- department (renew_certificate): "Rolling-Stock", "Signalling" or "Telecom"
+- date_text (renew_certificate): the new expiry exactly as written in the text, e.g. "for 6 months" or "10/10/2027"
+- job_card_id (close_job_card): the job card / work order number
+- description and priority (open_job_card): short defect text; priority "Critical", "High" or "Routine"
+- km (update_mileage): kilometres since the last inspection
+- source_text: the exact words from the text that support the update
+Return {"updates": []} if the text contains no fleet update."""
+
+BASE_PARSE_EXAMPLES = [
+    ("Today: 2026-03-02\nLogbook:\nTelecom cert for TS-15 renewed till 5 March 2027. Closed JC 1071.",
+     '{"updates":[{"train_name":"KMRL-TS-015","action":"renew_certificate","department":"Telecom","date_text":"5 March 2027",'
+     '"source_text":"Telecom cert for TS-15 renewed till 5 March 2027"},{"train_name":"","action":"close_job_card","job_card_id":1071,'
+     '"source_text":"Closed JC 1071"}]}'),
+    ("Today: 2026-03-02\nLogbook:\nTrain 7 A-check completed. Rake 22 door 3 not closing.",
+     '{"updates":[{"train_name":"KMRL-TS-007","action":"complete_maintenance","source_text":"Train 7 A-check completed"},'
+     '{"train_name":"KMRL-TS-022","action":"open_job_card","description":"Door 3 not closing","priority":"High",'
+     '"source_text":"Rake 22 door 3 not closing"}]}'),
+    ("Today: 2026-03-02\nLogbook:\nGood night all, meeting at 10.", '{"updates":[]}'),
+]
+
+BASE_ASK_SYSTEM = """You convert a train depot supervisor's question into a JSON query. Reply with JSON only.
+Keys: intent (one of count, list, train_detail, explain_assignment, expiring_certificates, open_jobs,
+branding_status, plan_summary, highest_wear, help), and where relevant status (Service, Standby,
+Inspection Bay, Cleaning, Held, Fit, Warning, Unfit; green=Fit, yellow=Warning, red=Unfit),
+train_name ("KMRL-TS-NNN"), days, priority (Critical, High, Routine), limit."""
+
+BASE_ASK_EXAMPLES = [
+    ("How many trains are on standby?", '{"intent":"count","status":"Standby"}'),
+    ("why is TS-9 in the inspection bay", '{"intent":"explain_assignment","train_name":"KMRL-TS-009"}'),
+    ("certs expiring in 10 days", '{"intent":"expiring_certificates","days":10}'),
+]
+
+
+class BaseModelEngine(ModelEngine):
+    """The base model *before* fine-tuning, given a detailed instruction prompt and worked examples (few-shot).
+
+    The fair baseline for "how much did fine-tuning help?": same model, same decoding, same scoring,
+    but it has to learn the task from the prompt instead of from training data.
+    """
+
+    def __init__(self, base: str = "Qwen/Qwen2.5-0.5B-Instruct"):
+        super().__init__(base, batch=8, name=f"base model, few-shot ({base.split('/')[-1]}, no fine-tuning)")
+
+    def messages(self, r: dict) -> list[dict]:
+        if r["task"] == "parse":
+            system, examples = BASE_PARSE_SYSTEM, BASE_PARSE_EXAMPLES
+            user = f"Today: {r['today']}\nLogbook:\n{r['text']}"
+        else:
+            system, examples, user = BASE_ASK_SYSTEM, BASE_ASK_EXAMPLES, r["question"]
+        msgs = [{"role": "system", "content": system}]
+        for q, a in examples:
+            msgs += [{"role": "user", "content": q}, {"role": "assistant", "content": a}]
+        return msgs + [{"role": "user", "content": user}]
+
+
+class OllamaEngine:
+    """A general-purpose local LLM served by Ollama (no fine-tuning), with the long instruction prompt."""
+
+    def __init__(self, model: str = "qwen3.5:latest"):
+        from app.ai.base import AIContext, AIUnavailable
+        from app.ai.ollama import OllamaProvider
+
+        self.provider, self.ctx_cls, self.unavailable = OllamaProvider("http://127.0.0.1:11434", model), AIContext, AIUnavailable
+        self.name = f"general LLM via Ollama ({model}, no fine-tuning)"
+
+    def run(self, rows: list[dict]) -> list[object]:
+        out = []
+        for r in rows:
+            try:
+                if r["task"] == "parse":
+                    today = date.fromisoformat(r["today"])
+                    ups = self.provider.parse_logbook(r["text"], self.ctx_cls(today, [], [], {}))
+                    proposed = [u.model_dump(exclude_none=True) for u in ups]
+                    out.append(ground_and_resolve(proposed, r["text"], today)[0])
+                else:
+                    out.append(self.provider.interpret_question(r["question"], None).model_dump(exclude_none=True))
+            except self.unavailable:
+                out.append(None)
         return out
 
 
@@ -134,17 +221,23 @@ def norm_intent(d: dict) -> dict:
 
 def score(rows: list[dict], preds: list[object]) -> dict:
     res = {"parse_n": 0, "parse_valid": 0, "parse_exact": 0, "parse_exact_relaxed": 0,
-           "tp": 0, "fp": 0, "fn": 0, "ask_n": 0, "ask_exact": 0, "failures": []}
+           "tp": 0, "fp": 0, "fn": 0, "ask_n": 0, "ask_exact": 0, "failures": [],
+           "per_action": {}, "per_intent": {}}
     for r, p in zip(rows, preds):
         if r["task"] == "parse":
             res["parse_n"] += 1
+            exp_r = {fact_key(u, False) for u in r["expected"]}
+            got_r = {fact_key(u, False) for u in p} if p is not None else set()
+            for u in r["expected"]:   # recall per action type: was this expected fact extracted?
+                a = res["per_action"].setdefault(u["action"], {"expected": 0, "found": 0})
+                a["expected"] += 1
+                a["found"] += fact_key(u, False) in got_r
             if p is None:
                 res["fn"] += len(r["expected"])
                 res["failures"].append({"text": r["text"], "got": "INVALID JSON"})
                 continue
             res["parse_valid"] += 1
             exp_s, got_s = {fact_key(u, True) for u in r["expected"]}, {fact_key(u, True) for u in p}
-            exp_r, got_r = {fact_key(u, False) for u in r["expected"]}, {fact_key(u, False) for u in p}
             res["parse_exact"] += exp_s == got_s
             res["parse_exact_relaxed"] += exp_r == got_r
             res["tp"] += len(exp_r & got_r)
@@ -156,6 +249,9 @@ def score(rows: list[dict], preds: list[object]) -> dict:
             res["ask_n"] += 1
             ok = p is not None and norm_intent(p) == norm_intent(r["expected"])
             res["ask_exact"] += ok
+            it = res["per_intent"].setdefault(r["expected"]["intent"], {"expected": 0, "found": 0})
+            it["expected"] += 1
+            it["found"] += ok
             if not ok:
                 res["failures"].append({"question": r["question"], "expected": r["expected"], "got": p})
     prec = res["tp"] / max(1, res["tp"] + res["fp"])
@@ -172,13 +268,23 @@ def score(rows: list[dict], preds: list[object]) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--engine", choices=["rules", "model"], required=True)
+    ap.add_argument("--engine", choices=["rules", "model", "base", "ollama"], required=True)
     ap.add_argument("--model-dir", type=Path, default=ROOT.parent / "backend" / "models" / "kmrl-copilot")
+    ap.add_argument("--ollama-model", default="qwen3.5:latest")
+    ap.add_argument("--sets", nargs="+", choices=["synthetic", "realworld"], default=["synthetic", "realworld"])
+    ap.add_argument("--tag", help="report name suffix, e.g. round1 -> reports/eval_model_round1.json")
     args = ap.parse_args()
 
-    engine = RulesEngine() if args.engine == "rules" else ModelEngine(args.model_dir)
+    engine = {
+        "rules": RulesEngine,
+        "model": lambda: ModelEngine(args.model_dir),
+        "base": BaseModelEngine,
+        "ollama": lambda: OllamaEngine(args.ollama_model),
+    }[args.engine]()
     report = {"engine": engine.name}
     for name, rows in load_sets().items():
+        if name not in args.sets:
+            continue
         t0 = time.perf_counter()
         preds = engine.run(rows)
         raw = score(rows, preds)
@@ -193,7 +299,7 @@ def main() -> None:
         print(f"  questions exact {s['ask_exact_rate']:.1%}")
     out = ROOT / "reports"
     out.mkdir(exist_ok=True)
-    path = out / f"eval_{args.engine}.json"
+    path = out / f"eval_{args.engine}{'_' + args.tag if args.tag else ''}.json"
     path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"\nFull report with failures: {path}")
 

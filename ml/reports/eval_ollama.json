@@ -1,0 +1,370 @@
+{
+  "engine": "general LLM via Ollama (qwen3.5:latest, no fine-tuning)",
+  "realworld": {
+    "parse_n": 43,
+    "parse_valid": 43,
+    "parse_exact": 21,
+    "parse_exact_relaxed": 21,
+    "tp": 25,
+    "fp": 3,
+    "fn": 24,
+    "ask_n": 25,
+    "ask_exact": 15,
+    "failures": [
+      {
+        "text": "Rake 14 got its rolling stock certificate today, valid for one year.",
+        "expected": [
+          "('KMRL-TS-014', 'renew_certificate', 'Rolling-Stock', '2027-10-11', None, None)"
+        ],
+        "got": []
+      },
+      {
+        "text": "Coach 2 of TS 08 AC not working, passengers complaining",
+        "expected": [
+          "('KMRL-TS-008', 'open_job_card', None, None, None, 'High')"
+        ],
+        "got": []
+      },
+      {
+        "text": "TS-16 PIS screen blank in car 1",
+        "expected": [
+          "('KMRL-TS-016', 'open_job_card', None, None, None, 'High')"
+        ],
+        "got": []
+      },
+      {
+        "text": "TS-04 interior light flickering in car 3 (minor)",
+        "expected": [
+          "('KMRL-TS-004', 'open_job_card', None, None, None, 'Routine')"
+        ],
+        "got": []
+      },
+      {
+        "text": "TS 17 deep clean finished, TS 18 inspection finished",
+        "expected": [
+          "('KMRL-TS-017', 'mark_cleaned', None, None, None, None)",
+          "('KMRL-TS-018', 'complete_maintenance', None, None, None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-017', 'flag_cleaning', None, None, None, None)",
+          "('KMRL-TS-018', 'complete_maintenance', None, None, None, None)"
+        ]
+      },
+      {
+        "text": "TS-10 Telecom and Signalling certificates renewed for 6 months",
+        "expected": [
+          "('KMRL-TS-010', 'renew_certificate', 'Signalling', '2027-04-11', None, None)",
+          "('KMRL-TS-010', 'renew_certificate', 'Telecom', '2027-04-11', None, None)"
+        ],
+        "got": []
+      },
+      {
+        "text": "Graffiti found on TS-06 exterior near Muttom",
+        "expected": [
+          "('KMRL-TS-006', 'flag_cleaning', None, None, None, None)"
+        ],
+        "got": []
+      },
+      {
+        "text": "TS-13 rolling stock fitness extended till 15 Jan 2027",
+        "expected": [
+          "('KMRL-TS-013', 'renew_certificate', 'Rolling-Stock', '2027-01-15', None, None)"
+        ],
+        "got": []
+      },
+      {
+        "text": "TS-20 CCTV not recording in car 2",
+        "expected": [
+          "('KMRL-TS-020', 'open_job_card', None, None, None, 'High')"
+        ],
+        "got": []
+      },
+      {
+        "text": "B check of TS-24 over. TS-24 good to go",
+        "expected": [
+          "('KMRL-TS-024', 'complete_maintenance', None, None, None, None)"
+        ],
+        "got": []
+      },
+      {
+        "text": "Smoke smell reported from under TS-15 car 3, withdraw immediately",
+        "expected": [
+          "('KMRL-TS-015', 'open_job_card', None, None, None, 'Critical')"
+        ],
+        "got": []
+      },
+      {
+        "text": "work order 1080 for TS-03 done",
+        "expected": [
+          "('close_job_card', 1080)"
+        ],
+        "got": []
+      },
+      {
+        "text": "TS-18 cleaning kazhinju, TS-19 needs cleaning",
+        "expected": [
+          "('KMRL-TS-018', 'mark_cleaned', None, None, None, None)",
+          "('KMRL-TS-019', 'flag_cleaning', None, None, None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-018', 'flag_cleaning', None, None, None, None)",
+          "('KMRL-TS-019', 'flag_cleaning', None, None, None, None)"
+        ]
+      },
+      {
+        "text": "Door 4 on TS-09 opening slowly",
+        "expected": [
+          "('KMRL-TS-009', 'open_job_card', None, None, None, 'Routine')"
+        ],
+        "got": []
+      },
+      {
+        "text": "TS-11 vibration noise from bogie, check urgently",
+        "expected": [
+          "('KMRL-TS-011', 'open_job_card', None, None, None, 'Critical')"
+        ],
+        "got": []
+      },
+      {
+        "text": "Mileage TS-16: 2100 km since inspection",
+        "expected": [
+          "('KMRL-TS-016', 'update_mileage', None, None, 2100, None)"
+        ],
+        "got": [
+          "('KMRL-TS-016', 'update_mileage', None, None, None, None)"
+        ]
+      },
+      {
+        "text": "JC 1072 HVAC leak fixed on TS-02",
+        "expected": [
+          "('close_job_card', 1072)"
+        ],
+        "got": []
+      },
+      {
+        "text": "TS-03 CCTV camera dead in car 4",
+        "expected": [
+          "('KMRL-TS-003', 'open_job_card', None, None, None, 'High')"
+        ],
+        "got": []
+      },
+      {
+        "text": "JC 1074 and JC 1075 both closed",
+        "expected": [
+          "('close_job_card', 1074)",
+          "('close_job_card', 1075)"
+        ],
+        "got": []
+      },
+      {
+        "text": "Train 12 HVAC tripping repeatedly, minor issue",
+        "expected": [
+          "('KMRL-TS-012', 'open_job_card', None, None, None, 'Routine')"
+        ],
+        "got": []
+      },
+      {
+        "text": "Burning smell reported in TS-18 car 3",
+        "expected": [
+          "('KMRL-TS-018', 'open_job_card', None, None, None, 'Critical')"
+        ],
+        "got": []
+      },
+      {
+        "text": "TS-25 window glass cracked in car 1",
+        "expected": [
+          "('KMRL-TS-025', 'open_job_card', None, None, None, 'Routine')"
+        ],
+        "got": []
+      },
+      {
+        "question": "list unfit trains",
+        "expected": {
+          "intent": "list",
+          "status": "Unfit"
+        },
+        "got": {
+          "intent": "count",
+          "status": "Unfit"
+        }
+      },
+      {
+        "question": "details of rake 14",
+        "expected": {
+          "intent": "train_detail",
+          "train_name": "KMRL-TS-014"
+        },
+        "got": {
+          "intent": "train_detail",
+          "train_name": "rake 14"
+        }
+      },
+      {
+        "question": "what does tomorrow's plan look like",
+        "expected": {
+          "intent": "plan_summary"
+        },
+        "got": {
+          "intent": "help",
+          "status": "unknown_plan"
+        }
+      },
+      {
+        "question": "what's the weather",
+        "expected": {
+          "intent": "help"
+        },
+        "got": {
+          "intent": "help",
+          "status": "unknown"
+        }
+      },
+      {
+        "question": "which trains are going to IBL tonight",
+        "expected": {
+          "intent": "list",
+          "status": "Inspection Bay"
+        },
+        "got": {
+          "intent": "count",
+          "status": "Service"
+        }
+      },
+      {
+        "question": "explain why TS-05 is held",
+        "expected": {
+          "intent": "explain_assignment",
+          "train_name": "KMRL-TS-005"
+        },
+        "got": {
+          "intent": "explain_assignment",
+          "train_name": "TS-05"
+        }
+      },
+      {
+        "question": "which trains are being cleaned tonight",
+        "expected": {
+          "intent": "list",
+          "status": "Cleaning"
+        },
+        "got": {
+          "intent": "count",
+          "status": "Cleaning"
+        }
+      },
+      {
+        "question": "status of TS-21",
+        "expected": {
+          "intent": "train_detail",
+          "train_name": "KMRL-TS-021"
+        },
+        "got": {
+          "intent": "train_detail",
+          "train_name": "TS-21"
+        }
+      },
+      {
+        "question": "hi",
+        "expected": {
+          "intent": "help"
+        },
+        "got": {
+          "intent": "help",
+          "status": "acknowledged"
+        }
+      },
+      {
+        "question": "what's wrong with TS-19",
+        "expected": {
+          "intent": "train_detail",
+          "train_name": "KMRL-TS-019"
+        },
+        "got": {
+          "intent": "train_detail",
+          "train_name": "TS-19"
+        }
+      }
+    ],
+    "per_action": {
+      "close_job_card": {
+        "expected": 9,
+        "found": 5
+      },
+      "renew_certificate": {
+        "expected": 9,
+        "found": 5
+      },
+      "mark_cleaned": {
+        "expected": 6,
+        "found": 4
+      },
+      "open_job_card": {
+        "expected": 14,
+        "found": 3
+      },
+      "complete_maintenance": {
+        "expected": 4,
+        "found": 3
+      },
+      "update_mileage": {
+        "expected": 3,
+        "found": 2
+      },
+      "flag_cleaning": {
+        "expected": 4,
+        "found": 3
+      }
+    },
+    "per_intent": {
+      "count": {
+        "expected": 5,
+        "found": 5
+      },
+      "list": {
+        "expected": 3,
+        "found": 0
+      },
+      "explain_assignment": {
+        "expected": 2,
+        "found": 1
+      },
+      "train_detail": {
+        "expected": 3,
+        "found": 0
+      },
+      "expiring_certificates": {
+        "expected": 4,
+        "found": 4
+      },
+      "open_jobs": {
+        "expected": 3,
+        "found": 3
+      },
+      "branding_status": {
+        "expected": 1,
+        "found": 1
+      },
+      "plan_summary": {
+        "expected": 1,
+        "found": 0
+      },
+      "highest_wear": {
+        "expected": 1,
+        "found": 1
+      },
+      "help": {
+        "expected": 2,
+        "found": 0
+      }
+    },
+    "parse_valid_rate": 1.0,
+    "parse_exact_rate": 0.4883720930232558,
+    "parse_exact_relaxed_rate": 0.4883720930232558,
+    "fact_precision": 0.8928571428571429,
+    "fact_recall": 0.5102040816326531,
+    "fact_f1": 0.6493506493506493,
+    "ask_exact_rate": 0.6,
+    "raw_parse_exact_rate": 0.4883720930232558,
+    "seconds": 100.8
+  }
+}

@@ -1,23 +1,445 @@
 {
-  "engine": "trained model (kmrl-copilot, cuda)",
+  "engine": "trained model (kmrl-copilot-round1, cuda)",
   "synthetic": {
-    "parse_n": 400,
-    "parse_valid": 400,
-    "parse_exact": 365,
-    "parse_exact_relaxed": 369,
-    "tp": 706,
-    "fp": 37,
-    "fn": 39,
-    "ask_n": 150,
-    "ask_exact": 150,
+    "parse_n": 478,
+    "parse_valid": 478,
+    "parse_exact": 421,
+    "parse_exact_relaxed": 421,
+    "tp": 795,
+    "fp": 46,
+    "fn": 69,
+    "ask_n": 209,
+    "ask_exact": 198,
     "failures": [
       {
-        "text": "RS dept renewed FC for Train 20 for another three months. ok",
+        "text": "Depot log: Train 30 scheduled inspection finished. Telecom dept & S&T cert for TS-28 extended for 4 weeks 👍",
         "expected": [
-          "('KMRL-TS-020', 'renew_certificate', 'Rolling-Stock', '2027-09-21', None, None)"
+          "('KMRL-TS-028', 'renew_certificate', 'Signalling', '2027-03-17', None, None)",
+          "('KMRL-TS-028', 'renew_certificate', 'Telecom', '2027-03-17', None, None)",
+          "('KMRL-TS-030', 'complete_maintenance', None, None, None, None)"
         ],
         "got": [
-          "('KMRL-TS-020', 'renew_certificate', 'Rolling-Stock', '2027-11-21', None, None)"
+          "('KMRL-TS-028', 'renew_certificate', 'Signalling', '2027-03-14', None, None)",
+          "('KMRL-TS-028', 'renew_certificate', 'Telecom', '2027-03-14', None, None)",
+          "('KMRL-TS-030', 'complete_maintenance', None, None, None, None)"
+        ]
+      },
+      {
+        "question": "any fcs due this week",
+        "expected": {
+          "intent": "expiring_certificates",
+          "days": 7
+        },
+        "got": {
+          "intent": "highest_wear",
+          "days": 7
+        }
+      },
+      {
+        "text": "pls note: signal dept renewed fitness for TS-14 for another 6 months. Inspection of Rake 28 carried out, all ok. Rake 31 requires deep cleaning. comms certificate of train no. 25 extended for 8 weeks 👍",
+        "expected": [
+          "('KMRL-TS-014', 'renew_certificate', 'Signalling', '2027-12-03', None, None)",
+          "('KMRL-TS-025', 'renew_certificate', 'Telecom', '2027-07-29', None, None)",
+          "('KMRL-TS-028', 'complete_maintenance', None, None, None, None)",
+          "('KMRL-TS-031', 'flag_cleaning', None, None, None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-014', 'renew_certificate', 'Signalling', '2027-12-03', None, None)",
+          "('KMRL-TS-025', 'renew_certificate', 'Telecom', '2027-07-03', None, None)",
+          "('KMRL-TS-028', 'complete_maintenance', None, None, None, None)",
+          "('KMRL-TS-031', 'flag_cleaning', None, None, None, None)"
+        ]
+      },
+      {
+        "text": "Signal cert of train 2 extended for another fortnight",
+        "expected": [
+          "('KMRL-TS-002', 'renew_certificate', 'Signalling', '2025-10-15', None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-002', 'renew_certificate', 'Signalling', '2025-11-01', None, None)"
+        ]
+      },
+      {
+        "text": "Vandalism reported on trainset 33.  closed job 1044 - TS 22 CCTV feed lost in car 1 sorted.  Maintenance completed on TS-12.  KMRL-TS-011 periodic maintenance over",
+        "expected": [
+          "('KMRL-TS-011', 'complete_maintenance', None, None, None, None)",
+          "('KMRL-TS-012', 'complete_maintenance', None, None, None, None)",
+          "('KMRL-TS-033', 'flag_cleaning', None, None, None, None)",
+          "('close_job_card', 1044)"
+        ],
+        "got": [
+          "('KMRL-TS-011', 'renew_certificate', 'Telecom', '2027-06-28', None, None)",
+          "('KMRL-TS-012', 'complete_maintenance', None, None, None, None)",
+          "('KMRL-TS-033', 'flag_cleaning', None, None, None, None)",
+          "('close_job_card', 1044)"
+        ]
+      },
+      {
+        "text": "Night shift update - Inspection of TS 40 carried out, all ok.  JC 1059, JC 1024 all completed.  TS 18 washed and detailed. -Anil",
+        "expected": [
+          "('KMRL-TS-018', 'mark_cleaned', None, None, None, None)",
+          "('KMRL-TS-040', 'complete_maintenance', None, None, None, None)",
+          "('close_job_card', 1024)",
+          "('close_job_card', 1059)"
+        ],
+        "got": [
+          "('KMRL-TS-018', 'mark_cleaned', None, None, None, None)",
+          "('KMRL-TS-040', 'complete_maintenance', None, None, None, None)",
+          "('close_job_card', 1059)"
+        ]
+      },
+      {
+        "text": "[23:05] traction motor overheating reported in Rake 23. rake 14 TC fitness cert renewed for another fortnight. Spill in cocah 3 of rake 17 ok aanu",
+        "expected": [
+          "('KMRL-TS-014', 'renew_certificate', 'Telecom', '2025-08-12', None, None)",
+          "('KMRL-TS-017', 'flag_cleaning', None, None, None, None)",
+          "('KMRL-TS-023', 'open_job_card', None, None, None, 'High')"
+        ],
+        "got": [
+          "('KMRL-TS-014', 'renew_certificate', 'Telecom', '2025-08-29', None, None)",
+          "('KMRL-TS-017', 'flag_cleaning', None, None, None, None)",
+          "('KMRL-TS-023', 'open_job_card', None, None, None, 'High')"
+        ]
+      },
+      {
+        "question": "any certs running out this fortnight",
+        "expected": {
+          "intent": "expiring_certificates",
+          "days": 14
+        },
+        "got": {
+          "intent": "expiring_certificates",
+          "days": 7
+        }
+      },
+      {
+        "text": "[22:41] train no. 12 signalling and rs fitnesss renewed for one fortnight Regards, Depot control",
+        "expected": [
+          "('KMRL-TS-012', 'renew_certificate', 'Rolling-Stock', '2027-09-15', None, None)",
+          "('KMRL-TS-012', 'renew_certificate', 'Signalling', '2027-09-15', None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-012', 'renew_certificate', 'Rolling-Stock', '2027-10-01', None, None)",
+          "('KMRL-TS-012', 'renew_certificate', 'Signalling', '2027-10-01', None, None)"
+        ]
+      },
+      {
+        "text": "Shift handover: ts-035 telecom dept and rolling-stock fcs renewed for 1 year\ntelecom fc for train 37 renewed till 9th oct 2026\nClosed job card #1096 on train 30.",
+        "expected": [
+          "('KMRL-TS-035', 'renew_certificate', 'Rolling-Stock', '2027-05-09', None, None)",
+          "('KMRL-TS-035', 'renew_certificate', 'Telecom', '2027-05-09', None, None)",
+          "('KMRL-TS-037', 'renew_certificate', 'Telecom', '2026-10-09', None, None)",
+          "('close_job_card', 1096)"
+        ],
+        "got": [
+          "('KMRL-TS-035', 'renew_certificate', 'Telecom', '2027-05-09', None, None)",
+          "('KMRL-TS-037', 'renew_certificate', 'Telecom', '2026-10-09', None, None)",
+          "('close_job_card', 1096)"
+        ]
+      },
+      {
+        "text": "FYI RS dept renewed FC for Set-23 for 6 weeks",
+        "expected": [
+          "('KMRL-TS-023', 'renew_certificate', 'Rolling-Stock', '2027-11-26', None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-023', 'renew_certificate', 'Rolling-Stock', '2027-11-15', None, None)"
+        ]
+      },
+      {
+        "text": "FYI kmrl-ts-016 inspection done.  Closed WO 1048 and JC 1172.  Train No 39 mileage since IBL 4101km. - Ramesh SSE",
+        "expected": [
+          "('KMRL-TS-016', 'complete_maintenance', None, None, None, None)",
+          "('KMRL-TS-039', 'update_mileage', None, None, 4101, None)",
+          "('close_job_card', 1048)",
+          "('close_job_card', 1172)"
+        ],
+        "got": [
+          "('KMRL-TS-016', 'complete_maintenance', None, None, None, None)",
+          "('KMRL-TS-039', 'update_mileage', None, None, 4101, None)",
+          "('close_job_card', 1048)"
+        ]
+      },
+      {
+        "text": "Night shift update - R/S certificate of fitness of TS-032 extended for 9 months. work order 1080 resolved, pls update. ts 24 very dirty, pls schedule deep cleaning. Canteen closed tomorrow. -Anil",
+        "expected": [
+          "('KMRL-TS-024', 'flag_cleaning', None, None, None, None)",
+          "('KMRL-TS-032', 'renew_certificate', 'Rolling-Stock', '2026-09-14', None, None)",
+          "('close_job_card', 1080)"
+        ],
+        "got": [
+          "('KMRL-TS-024', 'flag_cleaning', None, None, None, None)",
+          "('KMRL-TS-032', 'renew_certificate', 'Rolling-Stock', '2026-06-14', None, None)",
+          "('close_job_card', 1080)"
+        ]
+      },
+      {
+        "text": "ts-29 requires deep cleaning. S&T fitness certificate of TS 26 extended for six months. (night shift)",
+        "expected": [
+          "('KMRL-TS-026', 'renew_certificate', 'Signalling', '2026-10-06', None, None)",
+          "('KMRL-TS-029', 'flag_cleaning', None, None, None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-026', 'renew_certificate', 'Signalling', '2026-08-06', None, None)",
+          "('KMRL-TS-029', 'flag_cleaning', None, None, None, None)"
+        ]
+      },
+      {
+        "text": "[22:41] TS-29: Rolling-Stock certificate of fitness validity extended for 3 weeks.\nkmrl-ts-004 interior detailing completed ok aanu",
+        "expected": [
+          "('KMRL-TS-004', 'mark_cleaned', None, None, None, None)",
+          "('KMRL-TS-029', 'renew_certificate', 'Rolling-Stock', '2026-02-18', None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-004', 'mark_cleaned', None, None, None, None)",
+          "('KMRL-TS-029', 'renew_certificate', 'Rolling-Stock', '2026-02-14', None, None)"
+        ]
+      },
+      {
+        "text": "rolling stock dept renewed fitness cert for TS 3 for 120 days\nRake 38 scheduled inspection done\ndefect: kmrl-ts-029 cab seat adjuster stiff, withdraw immediately. Thanks",
+        "expected": [
+          "('KMRL-TS-003', 'renew_certificate', 'Rolling-Stock', '2027-10-18', None, None)",
+          "('KMRL-TS-029', 'open_job_card', None, None, None, 'Critical')",
+          "('KMRL-TS-038', 'complete_maintenance', None, None, None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-003', 'renew_certificate', 'Rolling-Stock', '2027-10-20', None, None)",
+          "('KMRL-TS-029', 'open_job_card', None, None, None, 'Critical')",
+          "('KMRL-TS-038', 'complete_maintenance', None, None, None, None)"
+        ]
+      },
+      {
+        "text": "Closed WO 1245, job card 1113",
+        "expected": [
+          "('close_job_card', 1113)",
+          "('close_job_card', 1245)"
+        ],
+        "got": [
+          "('close_job_card', 1245)"
+        ]
+      },
+      {
+        "question": "issues with train 19",
+        "expected": {
+          "intent": "train_detail",
+          "train_name": "KMRL-TS-019"
+        },
+        "got": {
+          "intent": "explain_assignment",
+          "train_name": "KMRL-TS-019"
+        }
+      },
+      {
+        "text": "FYI #1095 & jc 1023 all competed Thanks",
+        "expected": [
+          "('close_job_card', 1023)",
+          "('close_job_card', 1095)"
+        ],
+        "got": []
+      },
+      {
+        "text": "Update: deep clean rake 18 done.\nTelecom dept renewed fitness cert for TS-8 for 60 days. Regards, Depot control",
+        "expected": [
+          "('KMRL-TS-008', 'renew_certificate', 'Telecom', '2026-12-17', None, None)",
+          "('KMRL-TS-018', 'mark_cleaned', None, None, None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-008', 'renew_certificate', 'Telecom', '2026-11-18', None, None)",
+          "('KMRL-TS-018', 'mark_cleaned', None, None, None, None)"
+        ]
+      },
+      {
+        "text": "Hi sir, Raise job card for trainset 29 - seat cushion torn.  cleaning gang finished ts-27.  TS17: R/S fitness ok upto 2 Jan 2027.  Both signaling and R/S certificates of train 5 renewed, valid until 08/07/2027",
+        "expected": [
+          "('KMRL-TS-005', 'renew_certificate', 'Rolling-Stock', '2027-07-08', None, None)",
+          "('KMRL-TS-005', 'renew_certificate', 'Signalling', '2027-07-08', None, None)",
+          "('KMRL-TS-017', 'renew_certificate', 'Rolling-Stock', '2027-01-02', None, None)",
+          "('KMRL-TS-027', 'mark_cleaned', None, None, None, None)",
+          "('KMRL-TS-029', 'open_job_card', None, None, None, 'Routine')"
+        ],
+        "got": [
+          "('KMRL-TS-017', 'renew_certificate', 'Rolling-Stock', '2027-07-08', None, None)",
+          "('KMRL-TS-017', 'renew_certificate', 'Signalling', '2027-01-02', None, None)",
+          "('KMRL-TS-027', 'mark_cleaned', None, None, None, None)",
+          "('KMRL-TS-029', 'open_job_card', None, None, None, 'Routine')"
+        ]
+      },
+      {
+        "text": "FYI TS-7 TC certificate renewed for another fortnight.",
+        "expected": [
+          "('KMRL-TS-007', 'renew_certificate', 'Telecom', '2026-05-20', None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-007', 'renew_certificate', 'Telecom', '2026-06-03', None, None)"
+        ]
+      },
+      {
+        "text": "pls note: JC 1170 for TS21 closed.  r/s fc of ts-26 extended for 45 days. ok aanu",
+        "expected": [
+          "('KMRL-TS-026', 'renew_certificate', 'Rolling-Stock', '2027-05-11', None, None)",
+          "('close_job_card', 1170)"
+        ],
+        "got": [
+          "('KMRL-TS-026', 'renew_certificate', 'Rolling-Stock', '2027-05-24', None, None)",
+          "('close_job_card', 1170)"
+        ]
+      },
+      {
+        "text": "pls note: JC 1217 closed\nKMRL-TS-006 signalling certificate renewed for another fortnight\nNoticed parking brake stuck applied in Rake 25.",
+        "expected": [
+          "('KMRL-TS-006', 'renew_certificate', 'Signalling', '2026-10-23', None, None)",
+          "('KMRL-TS-025', 'open_job_card', None, None, None, 'Critical')",
+          "('close_job_card', 1217)"
+        ],
+        "got": [
+          "('KMRL-TS-006', 'renew_certificate', 'Signalling', '2026-11-09', None, None)",
+          "('KMRL-TS-025', 'open_job_card', None, None, None, 'Critical')",
+          "('close_job_card', 1217)"
+        ]
+      },
+      {
+        "text": "Night shift update - ts-01 Signal fitness certificate renewed for 4 weeks. certificate of fitness (telecom) TS 13 renewed - valid up to 5-8-2026. rake 12 cleaning completed.",
+        "expected": [
+          "('KMRL-TS-001', 'renew_certificate', 'Signalling', '2026-08-15', None, None)",
+          "('KMRL-TS-012', 'mark_cleaned', None, None, None, None)",
+          "('KMRL-TS-013', 'renew_certificate', 'Telecom', '2026-08-05', None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-001', 'renew_certificate', 'Signalling', '2026-08-18', None, None)",
+          "('KMRL-TS-012', 'mark_cleaned', None, None, None, None)",
+          "('KMRL-TS-013', 'renew_certificate', 'Telecom', '2026-08-05', None, None)"
+        ]
+      },
+      {
+        "text": "TS-25: telecom cert validity extended for 60 days\nRS dept issued FC to unit 10 valid till 22 Feb 2026\nts-09: rolling stock fc validity extended for a year\nrolling-stock dept issued fitness to TS 31 valid till 11-6-2026. (night shift)",
+        "expected": [
+          "('KMRL-TS-009', 'renew_certificate', 'Rolling-Stock', '2026-10-20', None, None)",
+          "('KMRL-TS-010', 'renew_certificate', 'Rolling-Stock', '2026-02-22', None, None)",
+          "('KMRL-TS-025', 'renew_certificate', 'Telecom', '2025-12-19', None, None)",
+          "('KMRL-TS-031', 'renew_certificate', 'Rolling-Stock', '2026-06-11', None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-009', 'renew_certificate', 'Rolling-Stock', '2026-06-11', None, None)",
+          "('KMRL-TS-010', 'renew_certificate', 'Rolling-Stock', '2026-02-22', None, None)",
+          "('KMRL-TS-025', 'renew_certificate', 'Telecom', '2025-12-20', None, None)",
+          "('KMRL-TS-031', 'renew_certificate', 'Rolling-Stock', '2026-06-11', None, None)"
+        ]
+      },
+      {
+        "question": "issues with ts-36",
+        "expected": {
+          "intent": "train_detail",
+          "train_name": "KMRL-TS-036"
+        },
+        "got": {
+          "intent": "explain_assignment",
+          "train_name": "KMRL-TS-036"
+        }
+      },
+      {
+        "text": "Shift handover: job card 1006 and job card 1077 all completed; TS-24 driver reported intercom not working; JC#1059 attended and closed",
+        "expected": [
+          "('KMRL-TS-024', 'open_job_card', None, None, None, 'High')",
+          "('close_job_card', 1006)",
+          "('close_job_card', 1059)",
+          "('close_job_card', 1077)"
+        ],
+        "got": [
+          "('close_job_card', 1006)",
+          "('close_job_card', 1059)",
+          "('close_job_card', 1077)"
+        ]
+      },
+      {
+        "text": "Shift handover: #1221 and job card 1031 all completed.  Cleaning gang finished set 11.  Security round completed pls note",
+        "expected": [
+          "('KMRL-TS-011', 'mark_cleaned', None, None, None, None)",
+          "('close_job_card', 1031)",
+          "('close_job_card', 1221)"
+        ],
+        "got": [
+          "('KMRL-TS-011', 'mark_cleaned', None, None, None, None)"
+        ]
+      },
+      {
+        "text": "job card 1035, JC 1195 and WO 1003 all closed\nTS23 B-check finished. ok aanu",
+        "expected": [
+          "('KMRL-TS-023', 'complete_maintenance', None, None, None, None)",
+          "('close_job_card', 1003)",
+          "('close_job_card', 1035)",
+          "('close_job_card', 1195)"
+        ],
+        "got": [
+          "('KMRL-TS-023', 'complete_maintenance', None, None, None, None)",
+          "('close_job_card', 1035)"
+        ]
+      },
+      {
+        "text": "Update: Signalling certificate of fitness of Rake 12 exteded for 30 days. Defect: TS 40 route map sticker peeling. Defect: TS-008 door obstruction detection not working.",
+        "expected": [
+          "('KMRL-TS-008', 'open_job_card', None, None, None, 'Critical')",
+          "('KMRL-TS-012', 'renew_certificate', 'Signalling', '2026-09-27', None, None)",
+          "('KMRL-TS-040', 'open_job_card', None, None, None, 'Routine')"
+        ],
+        "got": [
+          "('KMRL-TS-008', 'open_job_card', None, None, None, 'Critical')",
+          "('KMRL-TS-012', 'renew_certificate', 'Signalling', '2026-09-24', None, None)",
+          "('KMRL-TS-040', 'open_job_card', None, None, None, 'Routine')"
+        ]
+      },
+      {
+        "text": "ts-15 scheduled inspection kazhinju. TS 6: Signalling certificate validity extended for 8 weeks.",
+        "expected": [
+          "('KMRL-TS-006', 'renew_certificate', 'Signalling', '2025-10-05', None, None)",
+          "('KMRL-TS-015', 'complete_maintenance', None, None, None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-006', 'renew_certificate', 'Signalling', '2025-10-10', None, None)",
+          "('KMRL-TS-015', 'complete_maintenance', None, None, None, None)"
+        ]
+      },
+      {
+        "text": "[22:41] Train 34 cleaning done; train 4 - HVAC not cooling in car 2. Need attention, safety issue; train #8 foor sticky, cleaning required; job card 1048, JC 1152, WO 1017 all completed",
+        "expected": [
+          "('KMRL-TS-004', 'open_job_card', None, None, None, 'Critical')",
+          "('KMRL-TS-008', 'flag_cleaning', None, None, None, None)",
+          "('KMRL-TS-034', 'mark_cleaned', None, None, None, None)",
+          "('close_job_card', 1017)",
+          "('close_job_card', 1048)",
+          "('close_job_card', 1152)"
+        ],
+        "got": [
+          "('KMRL-TS-004', 'open_job_card', None, None, None, 'Critical')",
+          "('KMRL-TS-008', 'flag_cleaning', None, None, None, None)",
+          "('KMRL-TS-034', 'mark_cleaned', None, None, None, None)",
+          "('close_job_card', 1017)",
+          "('close_job_card', 1048)"
+        ]
+      },
+      {
+        "text": "[22:41] train 39 Rolling Stock and telecom certificate of fitnesss renewed for 15 days\nT05 periodic maintenance completed",
+        "expected": [
+          "('KMRL-TS-005', 'complete_maintenance', None, None, None, None)",
+          "('KMRL-TS-039', 'renew_certificate', 'Rolling-Stock', '2025-07-29', None, None)",
+          "('KMRL-TS-039', 'renew_certificate', 'Telecom', '2025-07-29', None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-005', 'complete_maintenance', None, None, None, None)",
+          "('KMRL-TS-039', 'renew_certificate', 'Rolling-Stock', '2025-08-01', None, None)",
+          "('KMRL-TS-039', 'renew_certificate', 'Telecom', '2025-08-01', None, None)"
+        ]
+      },
+      {
+        "text": "closed job card 1070, wo 1085 and jc 1079. Security round completed. TS16 interior stained, deep clean required -Anil",
+        "expected": [
+          "('KMRL-TS-016', 'flag_cleaning', None, None, None, None)",
+          "('close_job_card', 1070)",
+          "('close_job_card', 1079)",
+          "('close_job_card', 1085)"
+        ],
+        "got": [
+          "('KMRL-TS-016', 'flag_cleaning', None, None, None, None)",
+          "('close_job_card', 1070)"
         ]
       },
       {
@@ -32,64 +454,140 @@
         ]
       },
       {
-        "text": "Update: Defect: TS 25 door 2 failed to open. Rake 36 got rolling-stock fitness certificate renewed. New expiry 16 October. spill in coahc 4 of ts-012. Shift change at 22:00 as usual. Rake 29 washed and detailed.",
+        "text": "rolling stock & signalling certificate for train 36 extended for 1 months. wo-1094 done. All trains stabled. deep clean ts-35 completed. Paint sprayed on Rake 1 car 4.",
         "expected": [
-          "('KMRL-TS-012', 'flag_cleaning', None, None, None, None)",
-          "('KMRL-TS-025', 'open_job_card', None, None, None, 'High')",
-          "('KMRL-TS-029', 'mark_cleaned', None, None, None, None)",
-          "('KMRL-TS-036', 'renew_certificate', 'Rolling-Stock', '2026-10-16', None, None)"
+          "('KMRL-TS-001', 'flag_cleaning', None, None, None, None)",
+          "('KMRL-TS-035', 'mark_cleaned', None, None, None, None)",
+          "('KMRL-TS-036', 'renew_certificate', 'Rolling-Stock', '2027-12-16', None, None)",
+          "('KMRL-TS-036', 'renew_certificate', 'Signalling', '2027-12-16', None, None)",
+          "('close_job_card', 1094)"
         ],
         "got": [
           "('KMRL-TS-004', 'flag_cleaning', None, None, None, None)",
-          "('KMRL-TS-025', 'open_job_card', None, None, None, 'High')",
-          "('KMRL-TS-029', 'mark_cleaned', None, None, None, None)",
-          "('KMRL-TS-036', 'renew_certificate', 'Rolling-Stock', '2026-10-16', None, None)"
+          "('KMRL-TS-035', 'mark_cleaned', None, None, None, None)",
+          "('KMRL-TS-036', 'renew_certificate', 'Rolling-Stock', '2027-12-16', None, None)",
+          "('KMRL-TS-036', 'renew_certificate', 'Signalling', '2027-12-16', None, None)",
+          "('close_job_card', 1094)"
         ]
       },
       {
-        "text": "FYI received new telecommunication certificate of fitness for unit 38, expiry 11th september\nclosed jc#1063 on train no. 5 (night shift)",
+        "text": "Hi sir, jc 1014, jc 1054 all completed sheri",
         "expected": [
-          "('KMRL-TS-038', 'renew_certificate', 'Telecom', '2028-09-11', None, None)",
-          "('close_job_card', 1063)"
+          "('close_job_card', 1014)",
+          "('close_job_card', 1054)"
         ],
         "got": [
-          "('KMRL-TS-038', 'renew_certificate', 'Telecom', '2027-09-11', None, None)",
-          "('close_job_card', 1063)"
+          "('close_job_card', 1014)"
         ]
       },
       {
-        "text": "Update: TS-1 A-check completed; train 12 Telecom and Signal certificates renewed for 120 days; rake 03 very dirty, pls schedule deep cleaning.",
+        "text": "[23:05] train no. 36: R/S fitness ok upto 28-12-2025. Power block on line 3 from 01:00 to 04:00. #1245 and #1103 both closed 👍",
         "expected": [
-          "('KMRL-TS-001', 'complete_maintenance', None, None, None, None)",
-          "('KMRL-TS-003', 'flag_cleaning', None, None, None, None)",
-          "('KMRL-TS-012', 'renew_certificate', 'Signalling', '2025-11-03', None, None)",
-          "('KMRL-TS-012', 'renew_certificate', 'Telecom', '2025-11-03', None, None)"
+          "('KMRL-TS-036', 'renew_certificate', 'Rolling-Stock', '2025-12-28', None, None)",
+          "('close_job_card', 1103)",
+          "('close_job_card', 1245)"
         ],
         "got": [
-          "('KMRL-TS-001', 'complete_maintenance', None, None, None, None)",
-          "('KMRL-TS-003', 'flag_cleaning', None, None, None, None)",
-          "('KMRL-TS-012', 'renew_certificate', 'Signalling', '2025-10-04', None, None)",
-          "('KMRL-TS-012', 'renew_certificate', 'Telecom', '2025-10-04', None, None)"
+          "('KMRL-TS-036', 'renew_certificate', 'Rolling-Stock', '2025-12-28', None, None)"
         ]
       },
       {
-        "text": "Hi sir, interior panel rattling reported in trainset 29.  train #27 - minor hvac noise. need attention.  TS17: R/S fitness ok upto 2 Jan 2027.  Both signaling and R/S certificates of train 5 renewed, valid until 08/07/2027",
+        "text": "pls note: ts 2 needs a deep clean. train 5 wiper blade worn. signalling dept renewed fitness cert for TS 7 for another 9 months. (night shift)",
         "expected": [
-          "('KMRL-TS-005', 'renew_certificate', 'Rolling-Stock', '2027-07-08', None, None)",
-          "('KMRL-TS-005', 'renew_certificate', 'Signalling', '2027-07-08', None, None)",
-          "('KMRL-TS-017', 'renew_certificate', 'Rolling-Stock', '2027-01-02', None, None)",
-          "('KMRL-TS-027', 'open_job_card', None, None, None, 'Routine')",
-          "('KMRL-TS-029', 'open_job_card', None, None, None, 'Routine')"
+          "('KMRL-TS-002', 'flag_cleaning', None, None, None, None)",
+          "('KMRL-TS-005', 'open_job_card', None, None, None, 'Routine')",
+          "('KMRL-TS-007', 'renew_certificate', 'Signalling', '2026-07-10', None, None)"
         ],
         "got": [
-          "('KMRL-TS-017', 'renew_certificate', 'Rolling-Stock', '2027-07-08', None, None)",
-          "('KMRL-TS-017', 'renew_certificate', 'Signalling', '2027-01-02', None, None)",
-          "('KMRL-TS-027', 'open_job_card', None, None, None, 'Routine')",
-          "('KMRL-TS-029', 'open_job_card', None, None, None, 'Routine')"
+          "('KMRL-TS-002', 'flag_cleaning', None, None, None, None)",
+          "('KMRL-TS-005', 'open_job_card', None, None, None, 'Routine')",
+          "('KMRL-TS-007', 'renew_certificate', 'Signalling', '2026-03-10', None, None)"
         ]
       },
       {
-        "text": "Good evening. TS 8 driver reported emergency brake not releasing\ntelecommunication dept issued certificate of fitness to ts-40 valid till 2027-10-13\nBoth comms and R/S fitnesss of trainset 6 renewed, valid until March 22, 2028\nCleaning gang finished rake 29 Thanks",
+        "question": "Which FCs lapse in 5 days?",
+        "expected": {
+          "intent": "expiring_certificates",
+          "days": 5
+        },
+        "got": {
+          "intent": "list",
+          "status": "Unfit"
+        }
+      },
+      {
+        "text": "[22:41] WO 1186, WO 1215 all completed. Closed job 1005 on unit 8. ok",
+        "expected": [
+          "('close_job_card', 1005)",
+          "('close_job_card', 1186)",
+          "('close_job_card', 1215)"
+        ],
+        "got": [
+          "('close_job_card', 1005)",
+          "('close_job_card', 1186)"
+        ]
+      },
+      {
+        "text": "Update: kmrl-ts-040: pantograph uplift pressure low, pls raise jc\nJC-1103 resolved, pls update\nSill in coach 3 of ts-08 Thanks",
+        "expected": [
+          "('KMRL-TS-008', 'flag_cleaning', None, None, None, None)",
+          "('KMRL-TS-040', 'open_job_card', None, None, None, 'High')",
+          "('close_job_card', 1103)"
+        ],
+        "got": [
+          "('KMRL-TS-040', 'open_job_card', None, None, None, 'High')",
+          "('close_job_card', 1103)"
+        ]
+      },
+      {
+        "text": "Hi sir, raise job card for train 16 - cab camera offline, withdraw immediately.\ntrain 39 telecom cert renewed for another year.\nTS-026: R/S fitness ok upto 30 Aug 2027 ok",
+        "expected": [
+          "('KMRL-TS-016', 'open_job_card', None, None, None, 'Critical')",
+          "('KMRL-TS-026', 'renew_certificate', 'Rolling-Stock', '2027-08-30', None, None)",
+          "('KMRL-TS-039', 'renew_certificate', 'Telecom', '2027-03-25', None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-016', 'open_job_card', None, None, None, 'Critical')",
+          "('KMRL-TS-026', 'renew_certificate', 'Telecom', '2027-08-30', None, None)",
+          "('KMRL-TS-039', 'renew_certificate', 'Telecom', '2027-03-25', None, None)"
+        ]
+      },
+      {
+        "text": "[23:05] TS33 deep cleaned\nSecurity round completed\nTrain 7: RS fitness cert validity extended for another fortnight\nIBL work on Train No 19 finished\nset 40 ATP failure sorted, closed job card #1247.",
+        "expected": [
+          "('KMRL-TS-007', 'renew_certificate', 'Rolling-Stock', '2027-08-12', None, None)",
+          "('KMRL-TS-019', 'complete_maintenance', None, None, None, None)",
+          "('KMRL-TS-033', 'mark_cleaned', None, None, None, None)",
+          "('close_job_card', 1247)"
+        ],
+        "got": [
+          "('KMRL-TS-007', 'renew_certificate', 'Rolling-Stock', '2027-08-29', None, None)",
+          "('KMRL-TS-033', 'mark_cleaned', None, None, None, None)",
+          "('close_job_card', 1247)"
+        ]
+      },
+      {
+        "text": "Night shift update - Raise job card for train no. 3 - interior panel rattling\nGood night all\n#1088 & job card 1111 all completed ok",
+        "expected": [
+          "('KMRL-TS-003', 'open_job_card', None, None, None, 'Routine')",
+          "('close_job_card', 1088)",
+          "('close_job_card', 1111)"
+        ],
+        "got": [
+          "('KMRL-TS-003', 'open_job_card', None, None, None, 'Routine')"
+        ]
+      },
+      {
+        "text": "Update: TS40: R/S fitnesss cert validity extended for 90 days Regards, Depot control",
+        "expected": [
+          "('KMRL-TS-040', 'renew_certificate', 'Rolling-Stock', '2026-11-08', None, None)"
+        ],
+        "got": [
+          "('KMRL-TS-040', 'renew_certificate', 'Rolling-Stock', '2026-12-10', None, None)"
+        ]
+      },
+      {
+        "text": "Good evening. TS 8 driver reported fire alarm triggered in car 1\ntelecommunication dept issued certificate of fitness to ts-40 valid till 2027-10-13\nBoth comms and R/S fitnesss of trainset 6 renewed, valid until March 22, 2028\nCleaning gang finished rake 29 Thanks",
         "expected": [
           "('KMRL-TS-006', 'renew_certificate', 'Rolling-Stock', '2028-03-22', None, None)",
           "('KMRL-TS-006', 'renew_certificate', 'Telecom', '2028-03-22', None, None)",
@@ -107,375 +605,313 @@
         ]
       },
       {
-        "text": "Shift handover: signal cert of train 25 extended for two months. ts-3 out of ibl after inspection. train 2 interior detailing completed pls note",
+        "text": "Update: TS 23 Signalling and telecommunication certs renewed for 8 weeks. TS-04 deep cleaned. ts-22 WO-1080 resolved. train 5 periodic maintenance kazhinju. 👍",
         "expected": [
-          "('KMRL-TS-002', 'mark_cleaned', None, None, None, None)",
-          "('KMRL-TS-003', 'complete_maintenance', None, None, None, None)",
-          "('KMRL-TS-025', 'renew_certificate', 'Signalling', '2027-12-03', None, None)"
+          "('KMRL-TS-004', 'mark_cleaned', None, None, None, None)",
+          "('KMRL-TS-005', 'complete_maintenance', None, None, None, None)",
+          "('KMRL-TS-023', 'renew_certificate', 'Signalling', '2027-07-15', None, None)",
+          "('KMRL-TS-023', 'renew_certificate', 'Telecom', '2027-07-15', None, None)",
+          "('close_job_card', 1080)"
         ],
         "got": [
-          "('KMRL-TS-002', 'mark_cleaned', None, None, None, None)",
-          "('KMRL-TS-003', 'complete_maintenance', None, None, None, None)",
-          "('KMRL-TS-025', 'renew_certificate', 'Signalling', '2028-04-03', None, None)"
+          "('KMRL-TS-005', 'complete_maintenance', None, None, None, None)",
+          "('KMRL-TS-023', 'renew_certificate', 'Signalling', '2027-07-15', None, None)",
+          "('KMRL-TS-023', 'renew_certificate', 'Telecom', '2027-07-15', None, None)",
+          "('close_job_card', 1080)"
         ]
       },
       {
-        "text": "Depot log: closed JC-1207 - T15 handrail coer loose done\nThanks everyone\nkmrl-ts-003 door 3 slow to close - not urgent\nRain expected tonight, yard drains checked\nwork order 1199 resolved, pls update\nt16 clocked 2,905 km sice inspection.",
+        "text": "Rake 35 signal fitness, pls extend this for 15 days.",
         "expected": [
-          "('KMRL-TS-003', 'open_job_card', None, None, None, 'Routine')",
-          "('KMRL-TS-016', 'update_mileage', None, None, 2905, None)",
-          "('close_job_card', 1199)",
-          "('close_job_card', 1207)"
+          "('KMRL-TS-035', 'renew_certificate', 'Signalling', '2027-03-14', None, None)"
         ],
         "got": [
-          "('KMRL-TS-003', 'open_job_card', None, None, None, 'Critical')",
-          "('KMRL-TS-016', 'update_mileage', None, None, 2905, None)",
-          "('close_job_card', 1199)",
-          "('close_job_card', 1207)"
+          "('KMRL-TS-035', 'renew_certificate', 'Signalling', '2027-03-12', None, None)"
         ]
       },
       {
-        "text": "SSE update: TS28 got signalling fitness cert renewed. New expiry 17th Mar 2027\nsignaling & telecom fitness certifiate for Rake 12 extended upto 09/06/2026. Regards, Depot control",
+        "text": "Depot log: TS-16 rolling stock fitness cert extended for a fortnight ok",
         "expected": [
-          "('KMRL-TS-012', 'renew_certificate', 'Signalling', '2026-06-09', None, None)",
-          "('KMRL-TS-012', 'renew_certificate', 'Telecom', '2026-06-09', None, None)",
-          "('KMRL-TS-028', 'renew_certificate', 'Signalling', '2027-03-17', None, None)"
+          "('KMRL-TS-016', 'renew_certificate', 'Rolling-Stock', '2027-04-24', None, None)"
         ],
         "got": [
-          "('KMRL-TS-012', 'renew_certificate', 'Telecom', '2026-06-09', None, None)",
-          "('KMRL-TS-028', 'renew_certificate', 'Signalling', '2027-03-17', None, None)"
+          "('KMRL-TS-016', 'renew_certificate', 'Rolling-Stock', '2027-04-28', None, None)"
         ]
       },
       {
-        "text": "Night shift update - Raise job card for TS-15 - parking brake stuck applied\nReceived new signaling certificate of fitness for Rake 9, expiry 2028-10-14\nts-20 covered 6953km since last maintenance\nrolling-stock FC of TS 32 extended for one year. pls note",
+        "text": "renewed the TS-16 rolling stock cert for a fortnight Regards, Depot control",
         "expected": [
-          "('KMRL-TS-009', 'renew_certificate', 'Signalling', '2028-10-14', None, None)",
-          "('KMRL-TS-015', 'open_job_card', None, None, None, 'Critical')",
-          "('KMRL-TS-020', 'update_mileage', None, None, 6953, None)",
-          "('KMRL-TS-032', 'renew_certificate', 'Rolling-Stock', '2028-06-28', None, None)"
+          "('KMRL-TS-016', 'renew_certificate', 'Rolling-Stock', '2027-04-24', None, None)"
         ],
         "got": [
-          "('KMRL-TS-009', 'renew_certificate', 'Signalling', '2028-10-14', None, None)",
-          "('KMRL-TS-015', 'open_job_card', None, None, None, 'Critical')",
-          "('KMRL-TS-020', 'update_mileage', None, None, 6953, None)",
-          "('KMRL-TS-032', 'renew_certificate', 'Rolling-Stock', '2028-12-28', None, None)"
+          "('KMRL-TS-016', 'renew_certificate', 'Rolling-Stock', '2027-04-28', None, None)"
         ]
       },
       {
-        "text": "Good evening. s&t fitness certificate of ts 11 extended for three months.\nclosed job card 1015 - ts-32 atp failure fixed. Regards, Depot control",
+        "text": "[23:05] TS-14: Signalling cert renewed, now expiring 14th Jan 2029.. cleaning on TS-16 done. TS-11 RS fitness is extended for 90 days Thanks",
         "expected": [
-          "('KMRL-TS-011', 'renew_certificate', 'Signalling', '2027-04-29', None, None)",
-          "('close_job_card', 1015)"
+          "('KMRL-TS-011', 'renew_certificate', 'Rolling-Stock', '2027-12-19', None, None)",
+          "('KMRL-TS-014', 'renew_certificate', 'Signalling', '2029-01-14', None, None)",
+          "('KMRL-TS-016', 'mark_cleaned', None, None, None, None)"
         ],
         "got": [
-          "('KMRL-TS-011', 'renew_certificate', 'Signalling', '2027-04-28', None, None)",
-          "('close_job_card', 1015)"
+          "('KMRL-TS-011', 'renew_certificate', 'Rolling-Stock', '2027-12-20', None, None)",
+          "('KMRL-TS-014', 'renew_certificate', 'Signalling', '2029-01-14', None, None)",
+          "('KMRL-TS-016', 'mark_cleaned', None, None, None, None)"
         ]
       },
       {
-        "text": "FYI TS31 driver reported door 3 not closing. Deep cleaning of KMRL-TS-025 completed. TS 36 telecommunication and RS certificates renewed for 3 weeks. Rain expected tonight, yard drains checked pls note",
+        "text": "We got the TS-14 Signalling cert renewed; expiry is 14th Jan 2029.\nTS-16 cleaned, looks good\nRS fitness of TS-11 now runs for 90 days",
         "expected": [
-          "('KMRL-TS-025', 'mark_cleaned', None, None, None, None)",
-          "('KMRL-TS-031', 'open_job_card', None, None, None, 'High')",
-          "('KMRL-TS-036', 'renew_certificate', 'Rolling-Stock', '2025-10-02', None, None)",
-          "('KMRL-TS-036', 'renew_certificate', 'Telecom', '2025-10-02', None, None)"
+          "('KMRL-TS-011', 'renew_certificate', 'Rolling-Stock', '2027-12-19', None, None)",
+          "('KMRL-TS-014', 'renew_certificate', 'Signalling', '2029-01-14', None, None)",
+          "('KMRL-TS-016', 'mark_cleaned', None, None, None, None)"
         ],
         "got": [
-          "('KMRL-TS-025', 'mark_cleaned', None, None, None, None)",
-          "('KMRL-TS-031', 'open_job_card', None, None, None, 'High')",
-          "('KMRL-TS-036', 'renew_certificate', 'Rolling-Stock', '2025-10-07', None, None)",
-          "('KMRL-TS-036', 'renew_certificate', 'Telecom', '2025-10-07', None, None)"
+          "('KMRL-TS-011', 'renew_certificate', 'Rolling-Stock', '2027-11-20', None, None)",
+          "('KMRL-TS-014', 'renew_certificate', 'Signalling', '2029-01-14', None, None)",
+          "('KMRL-TS-016', 'mark_cleaned', None, None, None, None)"
         ]
       },
       {
-        "text": "Night shift update - train 16: radio not working, pls raise JC UREGNT\nunit 39 odometer since A-check: 4125km\nrake 26 deep cleaned. sheri",
+        "text": "Shift handover: job card 1052, WO 1185 shut out (night shift)",
         "expected": [
-          "('KMRL-TS-016', 'open_job_card', None, None, None, 'Critical')",
-          "('KMRL-TS-026', 'mark_cleaned', None, None, None, None)",
-          "('KMRL-TS-039', 'update_mileage', None, None, 4125, None)"
+          "('close_job_card', 1052)",
+          "('close_job_card', 1185)"
         ],
         "got": [
-          "('KMRL-TS-016', 'open_job_card', None, None, None, 'High')",
-          "('KMRL-TS-026', 'mark_cleaned', None, None, None, None)",
-          "('KMRL-TS-039', 'update_mileage', None, None, 4125, None)"
+          "('close_job_card', 1052)"
         ]
       },
       {
-        "text": "FYI telecommunication fitness of TS-36 extended for 90 days. ok aanu",
+        "text": "[22:41] Grab pole loose, driver TS-40 just flagged it. - Ramesh SSE",
         "expected": [
-          "('KMRL-TS-036', 'renew_certificate', 'Telecom', '2027-05-07', None, None)"
-        ],
-        "got": [
-          "('KMRL-TS-036', 'renew_certificate', 'Telecom', '2027-08-05', None, None)"
-        ]
-      },
-      {
-        "text": "FYI cert (signal) kmrl-ts-040 renewed - valid up to 28 december 2026.\nspill in coach 3 of set-13.\nts-18 driver reported interior panel rattling.\nVandalism reported on TS 36.",
-        "expected": [
-          "('KMRL-TS-013', 'flag_cleaning', None, None, None, None)",
-          "('KMRL-TS-018', 'open_job_card', None, None, None, 'Routine')",
-          "('KMRL-TS-036', 'flag_cleaning', None, None, None, None)",
-          "('KMRL-TS-040', 'renew_certificate', 'Signalling', '2026-12-28', None, None)"
-        ],
-        "got": [
-          "('KMRL-TS-013', 'flag_cleaning', None, None, None, None)",
-          "('KMRL-TS-018', 'open_job_card', None, None, None, 'Routine')",
-          "('KMRL-TS-036', 'flag_cleaning', None, None, None, None)",
-          "('KMRL-TS-040', 'renew_certificate', 'Signalling', '2027-12-28', None, None)"
-        ]
-      },
-      {
-        "text": "SSE update: rolling-stock dept renewed cert for TS-34 for 2 weeks.  ts-17 got rolling-stock cert renewed. new expiry 2026-08-09. -Anil",
-        "expected": [
-          "('KMRL-TS-017', 'renew_certificate', 'Rolling-Stock', '2026-08-09', None, None)",
-          "('KMRL-TS-034', 'renew_certificate', 'Rolling-Stock', '2026-06-02', None, None)"
-        ],
-        "got": [
-          "('KMRL-TS-017', 'renew_certificate', 'Rolling-Stock', '2026-08-09', None, None)",
-          "('KMRL-TS-034', 'renew_certificate', 'Rolling-Stock', '2026-06-28', None, None)"
-        ]
-      },
-      {
-        "text": "Shift handover: Rolling Stock certificate of TS27 exteended for 4 weeks\nrenewed S&T cert TS 7 till 27 October 2027 Regards, Depot control",
-        "expected": [
-          "('KMRL-TS-007', 'renew_certificate', 'Signalling', '2027-10-27', None, None)",
-          "('KMRL-TS-027', 'renew_certificate', 'Rolling-Stock', '2027-06-29', None, None)"
-        ],
-        "got": [
-          "('KMRL-TS-007', 'renew_certificate', 'Signalling', '2027-10-27', None, None)",
-          "('KMRL-TS-027', 'renew_certificate', 'Rolling-Stock', '2027-08-15', None, None)"
-        ]
-      },
-      {
-        "text": "TS-4 - brake failure on car 3. Need attention URGENT; train no. 30 clocked 1134 kilometres since inspection; rake 16 driver reported fire alarm triggered in car 1; Rake 17 telecommunication and signal certs renewed for 3 weeks.",
-        "expected": [
-          "('KMRL-TS-004', 'open_job_card', None, None, None, 'Critical')",
-          "('KMRL-TS-016', 'open_job_card', None, None, None, 'Critical')",
-          "('KMRL-TS-017', 'renew_certificate', 'Signalling', '2025-11-16', None, None)",
-          "('KMRL-TS-017', 'renew_certificate', 'Telecom', '2025-11-16', None, None)",
-          "('KMRL-TS-030', 'update_mileage', None, None, 1134, None)"
-        ],
-        "got": [
-          "('KMRL-TS-004', 'open_job_card', None, None, None, 'Critical')",
-          "('KMRL-TS-016', 'open_job_card', None, None, None, 'Critical')",
-          "('KMRL-TS-017', 'renew_certificate', 'Signalling', '2025-11-18', None, None)",
-          "('KMRL-TS-017', 'renew_certificate', 'Telecom', '2025-11-18', None, None)",
-          "('KMRL-TS-030', 'update_mileage', None, None, 1134, None)"
-        ]
-      },
-      {
-        "text": "FYI renewed TC certificate of fitness TS-21 till Nov 14\nNoticed interior panel rattling in Train 34\ncert (R/S) TS-002 renewed - valid up to 29 Mar 2027 pls note",
-        "expected": [
-          "('KMRL-TS-002', 'renew_certificate', 'Rolling-Stock', '2027-03-29', None, None)",
-          "('KMRL-TS-021', 'renew_certificate', 'Telecom', '2025-11-14', None, None)",
-          "('KMRL-TS-034', 'open_job_card', None, None, None, 'Routine')"
-        ],
-        "got": [
-          "('KMRL-TS-002', 'renew_certificate', 'Rolling-Stock', '2027-03-29', None, None)",
-          "('KMRL-TS-021', 'renew_certificate', 'Telecom', '2026-11-14', None, None)",
-          "('KMRL-TS-034', 'open_job_card', None, None, None, 'Routine')"
-        ]
-      },
-      {
-        "text": "pls note: Signalling certificate of fitness of Rake 12 exteded for 30 days.\nDefect: TS 40 minor HVAC noise.\nDefect: TS-008 crack on bogie frame ok",
-        "expected": [
-          "('KMRL-TS-008', 'open_job_card', None, None, None, 'Critical')",
-          "('KMRL-TS-012', 'renew_certificate', 'Signalling', '2026-09-27', None, None)",
           "('KMRL-TS-040', 'open_job_card', None, None, None, 'Routine')"
         ],
         "got": [
-          "('KMRL-TS-008', 'open_job_card', None, None, None, 'Critical')",
-          "('KMRL-TS-012', 'renew_certificate', 'Signalling', '2026-09-25', None, None)",
-          "('KMRL-TS-040', 'open_job_card', None, None, None, 'Routine')"
+          "('KMRL-TS-040', 'flag_cleaning', None, None, None, None)"
         ]
       },
       {
-        "text": "SSE update: TS-030 got comms certificate renewed. New expiry 22-10-2026; telecommunication dept renewed fitness for train #8 for a year. Regards, Depot control",
+        "text": "Update: TS-4 telecom cert renewed for 3 weeks\nDefect reported for trainset 29 with burning smell from car 2.\nGraffiti spotted on Rake 35 car 4 ok",
         "expected": [
-          "('KMRL-TS-008', 'renew_certificate', 'Telecom', '2027-09-20', None, None)",
-          "('KMRL-TS-030', 'renew_certificate', 'Telecom', '2026-10-22', None, None)"
+          "('KMRL-TS-004', 'renew_certificate', 'Telecom', '2027-01-14', None, None)",
+          "('KMRL-TS-029', 'open_job_card', None, None, None, 'Critical')",
+          "('KMRL-TS-035', 'flag_cleaning', None, None, None, None)"
         ],
         "got": [
-          "('KMRL-TS-008', 'renew_certificate', 'Telecom', '2027-09-20', None, None)",
-          "('KMRL-TS-030', 'renew_certificate', 'Telecom', '2027-10-22', None, None)"
+          "('KMRL-TS-004', 'renew_certificate', 'Telecom', '2027-01-12', None, None)",
+          "('KMRL-TS-029', 'open_job_card', None, None, None, 'Critical')",
+          "('KMRL-TS-035', 'flag_cleaning', None, None, None, None)"
         ]
       },
       {
-        "text": "Good evening. ts38: signalling fitness ok upto 28th august. closed job card #1244 - TS-7 ATP failure repaired. KMRL-TS-029 interior stained, deep clean required. ts-6 brake failure on car 3 replaced, closed job card 1154. -Anil",
+        "text": "pls note: renewed the TS-4 certificate via telecom dept for 3 weeks; trainset 29 has burning smell from car 2, defect noted.; Got graffiti on car 4 of Rake 35 -Anil",
         "expected": [
-          "('KMRL-TS-029', 'flag_cleaning', None, None, None, None)",
-          "('KMRL-TS-038', 'renew_certificate', 'Signalling', '2028-08-28', None, None)",
-          "('close_job_card', 1154)",
-          "('close_job_card', 1244)"
+          "('KMRL-TS-004', 'renew_certificate', 'Telecom', '2027-01-14', None, None)",
+          "('KMRL-TS-029', 'open_job_card', None, None, None, 'Critical')",
+          "('KMRL-TS-035', 'flag_cleaning', None, None, None, None)"
         ],
         "got": [
-          "('KMRL-TS-029', 'flag_cleaning', None, None, None, None)",
-          "('KMRL-TS-038', 'renew_certificate', 'Signalling', '2027-08-28', None, None)",
-          "('close_job_card', 1154)",
-          "('close_job_card', 1244)"
+          "('KMRL-TS-004', 'renew_certificate', 'Telecom', '2027-01-12', None, None)",
+          "('KMRL-TS-029', 'open_job_card', None, None, None, 'Critical')",
+          "('KMRL-TS-035', 'flag_cleaning', None, None, None, None)"
         ]
       },
       {
-        "text": "Update: TS40: R/S fitnesss cert validity extended for 90 days Regards, Depot control",
+        "text": "Shift handover: Received the Rolling Stock cert for unit 25 valid thru 4 April.\nrenewed the fitness cert for Rake 11 with rolling-stock dept for another fortnight ok",
         "expected": [
-          "('KMRL-TS-040', 'renew_certificate', 'Rolling-Stock', '2026-11-08', None, None)"
+          "('KMRL-TS-011', 'renew_certificate', 'Rolling-Stock', '2026-08-04', None, None)",
+          "('KMRL-TS-025', 'renew_certificate', 'Rolling-Stock', '2027-04-04', None, None)"
         ],
         "got": [
-          "('KMRL-TS-040', 'renew_certificate', 'Rolling-Stock', '2027-03-10', None, None)"
+          "('KMRL-TS-011', 'renew_certificate', 'Rolling-Stock', '2026-08-04', None, None)",
+          "('KMRL-TS-025', 'renew_certificate', 'Rolling-Stock', '2026-08-04', None, None)"
         ]
       },
       {
-        "text": "Raise job card for rake 35 - pantograph uplift pressure low, safety issue.\nRaise job card for rake 28 - CBTC onboard unit fault, critical.\nTelecom & signalling FC for train 31 extended for 3 weeks",
+        "text": "Radio not working reported by TS 26 driver. job 1087 closed, trainset 5. Work order 1112 closed; KMRL-TS-002 door 2 repair done",
         "expected": [
-          "('KMRL-TS-028', 'open_job_card', None, None, None, 'Critical')",
-          "('KMRL-TS-031', 'renew_certificate', 'Signalling', '2027-06-27', None, None)",
-          "('KMRL-TS-031', 'renew_certificate', 'Telecom', '2027-06-27', None, None)",
-          "('KMRL-TS-035', 'open_job_card', None, None, None, 'Critical')"
+          "('KMRL-TS-026', 'open_job_card', None, None, None, 'High')",
+          "('close_job_card', 1087)",
+          "('close_job_card', 1112)"
         ],
         "got": [
-          "('KMRL-TS-028', 'open_job_card', None, None, None, 'Critical')",
-          "('KMRL-TS-031', 'renew_certificate', 'Signalling', '2027-07-04', None, None)",
-          "('KMRL-TS-031', 'renew_certificate', 'Telecom', '2027-07-04', None, None)",
-          "('KMRL-TS-035', 'open_job_card', None, None, None, 'Critical')"
+          "('KMRL-TS-002', 'complete_maintenance', None, None, None, None)",
+          "('KMRL-TS-026', 'open_job_card', None, None, None, 'High')",
+          "('close_job_card', 1087)",
+          "('close_job_card', 1112)"
         ]
       },
       {
-        "text": "pls note: ts 2 needs a deep clean. train 5 seat panel damaged. signalling dept renewed fitness cert for TS 7 for another 9 months. (night shift)",
+        "text": "Shift handover: Reported: door 3 slow to close in TS-37.\nRS cert of KMRL-TS-006 is now valid for one fortnight more\ntrain no. 2 has no cooling in car 3, need attention",
         "expected": [
-          "('KMRL-TS-002', 'flag_cleaning', None, None, None, None)",
-          "('KMRL-TS-005', 'open_job_card', None, None, None, 'Routine')",
-          "('KMRL-TS-007', 'renew_certificate', 'Signalling', '2026-07-10', None, None)"
+          "('KMRL-TS-002', 'open_job_card', None, None, None, 'High')",
+          "('KMRL-TS-006', 'renew_certificate', 'Rolling-Stock', '2027-10-14', None, None)",
+          "('KMRL-TS-037', 'open_job_card', None, None, None, 'Routine')"
         ],
         "got": [
-          "('KMRL-TS-002', 'flag_cleaning', None, None, None, None)",
-          "('KMRL-TS-005', 'open_job_card', None, None, None, 'Routine')",
-          "('KMRL-TS-007', 'renew_certificate', 'Signalling', '2026-03-10', None, None)"
+          "('KMRL-TS-002', 'open_job_card', None, None, None, 'High')",
+          "('KMRL-TS-006', 'renew_certificate', 'Rolling-Stock', '2027-10-03', None, None)",
+          "('KMRL-TS-037', 'open_job_card', None, None, None, 'Routine')"
         ]
       },
       {
-        "text": "Hi sir, s&t dept renewed fitness cert for ts-38 for 2 weeks.",
+        "text": "pls note: Train No 10 suffers brake failure on car 3.\nTrain 22 R/S fitness cert has been renewed for six months. 👍",
         "expected": [
-          "('KMRL-TS-038', 'renew_certificate', 'Signalling', '2027-04-15', None, None)"
+          "('KMRL-TS-010', 'open_job_card', None, None, None, 'Critical')",
+          "('KMRL-TS-022', 'renew_certificate', 'Rolling-Stock', '2027-10-21', None, None)"
         ],
         "got": [
-          "('KMRL-TS-038', 'renew_certificate', 'Signalling', '2027-04-25', None, None)"
+          "('KMRL-TS-010', 'open_job_card', None, None, None, 'Critical')",
+          "('KMRL-TS-022', 'renew_certificate', 'Rolling-Stock', '2027-08-21', None, None)"
         ]
       },
       {
-        "text": "Good evening. R/S & telecommunication certificate for train 5 extended upto 15/02/2027.\nRS dept renewed fitness certificate for Train 39 for 12 months ok",
-        "expected": [
-          "('KMRL-TS-005', 'renew_certificate', 'Rolling-Stock', '2027-02-15', None, None)",
-          "('KMRL-TS-005', 'renew_certificate', 'Telecom', '2027-02-15', None, None)",
-          "('KMRL-TS-039', 'renew_certificate', 'Rolling-Stock', '2027-01-01', None, None)"
-        ],
-        "got": [
-          "('KMRL-TS-005', 'renew_certificate', 'Rolling-Stock', '2027-02-15', None, None)",
-          "('KMRL-TS-039', 'renew_certificate', 'Rolling-Stock', '2027-04-01', None, None)"
-        ]
+        "question": "do we have any lapsing FCs in the coming 14 days",
+        "expected": {
+          "intent": "expiring_certificates",
+          "days": 14
+        },
+        "got": {
+          "intent": "list",
+          "status": "Lapsing"
+        }
       },
       {
-        "text": "[22:41] work order 1035 resolved, pls udate\nClosed work order 1088 on Train 19\nTS-36: Rolling-Stock certificate of fitness validity extended for 3 weeks pls note",
-        "expected": [
-          "('KMRL-TS-036', 'renew_certificate', 'Rolling-Stock', '2026-11-09', None, None)",
-          "('close_job_card', 1035)",
-          "('close_job_card', 1088)"
-        ],
-        "got": [
-          "('KMRL-TS-036', 'renew_certificate', 'Rolling-Stock', '2026-11-07', None, None)",
-          "('close_job_card', 1035)",
-          "('close_job_card', 1088)"
-        ]
+        "question": "which FCs lapse in these 14 days?",
+        "expected": {
+          "intent": "expiring_certificates",
+          "days": 14
+        },
+        "got": {
+          "intent": "list",
+          "days": 14
+        }
       },
       {
-        "text": "Depot log: TS-28 RS cert renewed for another 3 months; Received new telecom cert for TS23, expiry 29 Apr 2028; JC 1147 (train no. 29) attended and closed; rake 11 deep cleaned pls note",
-        "expected": [
-          "('KMRL-TS-011', 'mark_cleaned', None, None, None, None)",
-          "('KMRL-TS-023', 'renew_certificate', 'Telecom', '2028-04-29', None, None)",
-          "('KMRL-TS-028', 'renew_certificate', 'Rolling-Stock', '2027-07-15', None, None)",
-          "('close_job_card', 1147)"
-        ],
-        "got": [
-          "('KMRL-TS-011', 'mark_cleaned', None, None, None, None)",
-          "('KMRL-TS-023', 'renew_certificate', 'Telecom', '2028-04-29', None, None)",
-          "('KMRL-TS-028', 'renew_certificate', 'Rolling-Stock', '2027-06-15', None, None)",
-          "('close_job_card', 1147)"
-        ]
+        "question": "which rakes are up for inspection soon",
+        "expected": {
+          "intent": "highest_wear"
+        },
+        "got": {
+          "intent": "list",
+          "status": "Inspection Bay"
+        }
       },
       {
-        "text": "[23:05] Signalling dept renewed fitness for TS-35 for 6 weeks. closed job 1234 - TS-010 saloon AC tripping done (night shift)",
-        "expected": [
-          "('KMRL-TS-035', 'renew_certificate', 'Signalling', '2027-10-14', None, None)",
-          "('close_job_card', 1234)"
-        ],
-        "got": [
-          "('KMRL-TS-035', 'renew_certificate', 'Signalling', '2027-10-08', None, None)",
-          "('close_job_card', 1234)"
-        ]
+        "question": "rakes coming up for inspection soon?",
+        "expected": {
+          "intent": "highest_wear"
+        },
+        "got": {
+          "intent": "list",
+          "status": "Inspection Bay"
+        }
       },
       {
-        "text": "Update: TS-29 driver reported window glass scratched - not urgent. noticed door 3 not closing in rake 8. train 6 R/S and signalling fitness certificates renewed till 13 Feb 2027. Visitor pass for contractor issued (night shift)",
-        "expected": [
-          "('KMRL-TS-006', 'renew_certificate', 'Rolling-Stock', '2027-02-13', None, None)",
-          "('KMRL-TS-006', 'renew_certificate', 'Signalling', '2027-02-13', None, None)",
-          "('KMRL-TS-008', 'open_job_card', None, None, None, 'High')",
-          "('KMRL-TS-029', 'open_job_card', None, None, None, 'Routine')"
-        ],
-        "got": [
-          "('KMRL-TS-006', 'renew_certificate', 'Rolling-Stock', '2027-02-13', None, None)",
-          "('KMRL-TS-006', 'renew_certificate', 'Signalling', '2027-02-13', None, None)",
-          "('KMRL-TS-008', 'open_job_card', None, None, None, 'High')",
-          "('KMRL-TS-029', 'open_job_card', None, None, None, 'Critical')"
-        ]
+        "question": "what rakes are scheduled for inspection?",
+        "expected": {
+          "intent": "highest_wear"
+        },
+        "got": {
+          "intent": "list",
+          "status": "Inspection Bay"
+        }
       },
       {
-        "text": "Good evening. set 3 job 1019 resolved\ncleaning gang finished trainset 28\nThanks everyone\nTS-12 Telecom dept and signaling certs renewed for three months\nDepot control: radio check done. -Anil",
-        "expected": [
-          "('KMRL-TS-012', 'renew_certificate', 'Signalling', '2026-02-25', None, None)",
-          "('KMRL-TS-012', 'renew_certificate', 'Telecom', '2026-02-25', None, None)",
-          "('KMRL-TS-028', 'mark_cleaned', None, None, None, None)",
-          "('close_job_card', 1019)"
-        ],
-        "got": [
-          "('KMRL-TS-012', 'renew_certificate', 'Signalling', '2026-07-25', None, None)",
-          "('KMRL-TS-012', 'renew_certificate', 'Telecom', '2026-04-25', None, None)",
-          "('KMRL-TS-028', 'mark_cleaned', None, None, None, None)",
-          "('close_job_card', 1019)"
-        ]
-      },
-      {
-        "text": "Night shift update - TS-006 Signalling and RS certificate of fitnesss renewed till 20th Nov 2026\nSignal fitness certificate of set 9 extended for another 3 months sheri",
-        "expected": [
-          "('KMRL-TS-006', 'renew_certificate', 'Rolling-Stock', '2026-11-20', None, None)",
-          "('KMRL-TS-006', 'renew_certificate', 'Signalling', '2026-11-20', None, None)",
-          "('KMRL-TS-009', 'renew_certificate', 'Signalling', '2026-01-11', None, None)"
-        ],
-        "got": [
-          "('KMRL-TS-006', 'renew_certificate', 'Rolling-Stock', '2026-11-20', None, None)",
-          "('KMRL-TS-006', 'renew_certificate', 'Signalling', '2026-11-20', None, None)",
-          "('KMRL-TS-009', 'renew_certificate', 'Signalling', '2025-12-11', None, None)"
-        ]
-      },
-      {
-        "text": "[22:41] Set-28 Telecom fitness cert renewed, valid until 25th June\nTS 5 LED strip partly off in car 4 - not urgent (night shift)",
-        "expected": [
-          "('KMRL-TS-005', 'open_job_card', None, None, None, 'Routine')",
-          "('KMRL-TS-028', 'renew_certificate', 'Telecom', '2026-06-25', None, None)"
-        ],
-        "got": [
-          "('KMRL-TS-005', 'open_job_card', None, None, None, 'Critical')",
-          "('KMRL-TS-028', 'renew_certificate', 'Telecom', '2026-06-25', None, None)"
-        ]
+        "question": "show me the ambers",
+        "expected": {
+          "intent": "list",
+          "status": "Warning"
+        },
+        "got": {
+          "intent": "list",
+          "status": "Amber"
+        }
       }
     ],
+    "per_action": {
+      "complete_maintenance": {
+        "expected": 76,
+        "found": 74
+      },
+      "renew_certificate": {
+        "expected": 215,
+        "found": 172
+      },
+      "flag_cleaning": {
+        "expected": 104,
+        "found": 102
+      },
+      "update_mileage": {
+        "expected": 51,
+        "found": 51
+      },
+      "mark_cleaned": {
+        "expected": 80,
+        "found": 79
+      },
+      "open_job_card": {
+        "expected": 177,
+        "found": 175
+      },
+      "close_job_card": {
+        "expected": 161,
+        "found": 142
+      }
+    },
+    "per_intent": {
+      "branding_status": {
+        "expected": 18,
+        "found": 18
+      },
+      "open_jobs": {
+        "expected": 22,
+        "found": 22
+      },
+      "count": {
+        "expected": 29,
+        "found": 29
+      },
+      "explain_assignment": {
+        "expected": 23,
+        "found": 23
+      },
+      "help": {
+        "expected": 19,
+        "found": 19
+      },
+      "expiring_certificates": {
+        "expected": 28,
+        "found": 23
+      },
+      "plan_summary": {
+        "expected": 16,
+        "found": 16
+      },
+      "list": {
+        "expected": 25,
+        "found": 24
+      },
+      "highest_wear": {
+        "expected": 12,
+        "found": 9
+      },
+      "train_detail": {
+        "expected": 17,
+        "found": 15
+      }
+    },
     "parse_valid_rate": 1.0,
-    "parse_exact_rate": 0.9125,
-    "parse_exact_relaxed_rate": 0.9225,
-    "fact_precision": 0.9502018842530283,
-    "fact_recall": 0.9476510067114094,
-    "fact_f1": 0.9489247311827959,
-    "ask_exact_rate": 1.0,
-    "raw_parse_exact_rate": 0.9125,
-    "seconds": 94.7
+    "parse_exact_rate": 0.8807531380753139,
+    "parse_exact_relaxed_rate": 0.8807531380753139,
+    "fact_precision": 0.9453032104637337,
+    "fact_recall": 0.9201388888888888,
+    "fact_f1": 0.9325513196480938,
+    "ask_exact_rate": 0.9473684210526315,
+    "raw_parse_exact_rate": 0.8577405857740585,
+    "seconds": 145.8
   },
   "realworld": {
     "parse_n": 43,
@@ -506,7 +942,7 @@
         ],
         "got": [
           "('KMRL-TS-024', 'complete_maintenance', None, None, None, None)",
-          "('KMRL-TS-024', 'renew_certificate', 'Telecom', '2027-03-11', None, None)"
+          "('KMRL-TS-024', 'renew_certificate', 'Telecom', '2027-01-11', None, None)"
         ]
       },
       {
@@ -562,6 +998,78 @@
         }
       }
     ],
+    "per_action": {
+      "close_job_card": {
+        "expected": 9,
+        "found": 8
+      },
+      "renew_certificate": {
+        "expected": 9,
+        "found": 6
+      },
+      "mark_cleaned": {
+        "expected": 6,
+        "found": 6
+      },
+      "open_job_card": {
+        "expected": 14,
+        "found": 14
+      },
+      "complete_maintenance": {
+        "expected": 4,
+        "found": 4
+      },
+      "update_mileage": {
+        "expected": 3,
+        "found": 3
+      },
+      "flag_cleaning": {
+        "expected": 4,
+        "found": 4
+      }
+    },
+    "per_intent": {
+      "count": {
+        "expected": 5,
+        "found": 5
+      },
+      "list": {
+        "expected": 3,
+        "found": 3
+      },
+      "explain_assignment": {
+        "expected": 2,
+        "found": 2
+      },
+      "train_detail": {
+        "expected": 3,
+        "found": 2
+      },
+      "expiring_certificates": {
+        "expected": 4,
+        "found": 2
+      },
+      "open_jobs": {
+        "expected": 3,
+        "found": 3
+      },
+      "branding_status": {
+        "expected": 1,
+        "found": 1
+      },
+      "plan_summary": {
+        "expected": 1,
+        "found": 1
+      },
+      "highest_wear": {
+        "expected": 1,
+        "found": 1
+      },
+      "help": {
+        "expected": 2,
+        "found": 2
+      }
+    },
     "parse_valid_rate": 1.0,
     "parse_exact_rate": 0.9069767441860465,
     "parse_exact_relaxed_rate": 0.9069767441860465,
@@ -570,6 +1078,6 @@
     "fact_f1": 0.9183673469387755,
     "ask_exact_rate": 0.88,
     "raw_parse_exact_rate": 0.8837209302325582,
-    "seconds": 10.0
+    "seconds": 13.7
   }
 }

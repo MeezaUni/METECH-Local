@@ -160,6 +160,78 @@
         }
       }
     ],
+    "per_action": {
+      "complete_maintenance": {
+        "expected": 76,
+        "found": 76
+      },
+      "renew_certificate": {
+        "expected": 215,
+        "found": 214
+      },
+      "flag_cleaning": {
+        "expected": 104,
+        "found": 104
+      },
+      "update_mileage": {
+        "expected": 51,
+        "found": 51
+      },
+      "mark_cleaned": {
+        "expected": 80,
+        "found": 80
+      },
+      "open_job_card": {
+        "expected": 177,
+        "found": 177
+      },
+      "close_job_card": {
+        "expected": 161,
+        "found": 161
+      }
+    },
+    "per_intent": {
+      "branding_status": {
+        "expected": 18,
+        "found": 18
+      },
+      "open_jobs": {
+        "expected": 22,
+        "found": 20
+      },
+      "count": {
+        "expected": 29,
+        "found": 29
+      },
+      "explain_assignment": {
+        "expected": 23,
+        "found": 23
+      },
+      "help": {
+        "expected": 19,
+        "found": 19
+      },
+      "expiring_certificates": {
+        "expected": 28,
+        "found": 28
+      },
+      "plan_summary": {
+        "expected": 16,
+        "found": 16
+      },
+      "list": {
+        "expected": 25,
+        "found": 24
+      },
+      "highest_wear": {
+        "expected": 12,
+        "found": 10
+      },
+      "train_detail": {
+        "expected": 17,
+        "found": 17
+      }
+    },
     "parse_valid_rate": 1.0,
     "parse_exact_rate": 0.9874476987447699,
     "parse_exact_relaxed_rate": 0.9874476987447699,
@@ -168,7 +240,7 @@
     "fact_f1": 0.9965357967667435,
     "ask_exact_rate": 0.9760765550239234,
     "raw_parse_exact_rate": 0.9811715481171548,
-    "seconds": 139.2
+    "seconds": 161.0
   },
   "realworld": {
     "parse_n": 43,
@@ -192,6 +264,78 @@
         ]
       }
     ],
+    "per_action": {
+      "close_job_card": {
+        "expected": 9,
+        "found": 8
+      },
+      "renew_certificate": {
+        "expected": 9,
+        "found": 9
+      },
+      "mark_cleaned": {
+        "expected": 6,
+        "found": 6
+      },
+      "open_job_card": {
+        "expected": 14,
+        "found": 14
+      },
+      "complete_maintenance": {
+        "expected": 4,
+        "found": 4
+      },
+      "update_mileage": {
+        "expected": 3,
+        "found": 3
+      },
+      "flag_cleaning": {
+        "expected": 4,
+        "found": 4
+      }
+    },
+    "per_intent": {
+      "count": {
+        "expected": 5,
+        "found": 5
+      },
+      "list": {
+        "expected": 3,
+        "found": 3
+      },
+      "explain_assignment": {
+        "expected": 2,
+        "found": 2
+      },
+      "train_detail": {
+        "expected": 3,
+        "found": 3
+      },
+      "expiring_certificates": {
+        "expected": 4,
+        "found": 4
+      },
+      "open_jobs": {
+        "expected": 3,
+        "found": 3
+      },
+      "branding_status": {
+        "expected": 1,
+        "found": 1
+      },
+      "plan_summary": {
+        "expected": 1,
+        "found": 1
+      },
+      "highest_wear": {
+        "expected": 1,
+        "found": 1
+      },
+      "help": {
+        "expected": 2,
+        "found": 2
+      }
+    },
     "parse_valid_rate": 1.0,
     "parse_exact_rate": 0.9767441860465116,
     "parse_exact_relaxed_rate": 0.9767441860465116,

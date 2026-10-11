@@ -70,12 +70,19 @@ engine score. A test guarantees that no test sentence ever appears in generated 
 
 Hand-written real-world test set (43 logbook messages, 25 questions), scored as the supervisor sees it:
 
-| | Rule engine | Round 1 | **Round 2** | Gemini (cloud) |
+| Engine | Logbook fully correct | Fact precision / recall | Questions | Synthetic logbook / questions |
 |---|---|---|---|---|
-| Logbook messages fully correct | 76.7% | 90.7% | **97.7%** | 100% |
-| Fact precision / recall | 97.4% / 77.6% | 91.8% / 91.8% | **100% / 98.0%** | 100% / 100% |
-| Questions understood | 84.0% | 88.0% | **100%** | 100% |
-| Synthetic validation, logbook / questions | — | 91.2% / 100% | **98.7% / 97.6%** | — |
+| Qwen2.5-0.5B, **no fine-tuning** (detailed prompt + 3 examples) | 4.7% | 15.0% / 6.1% | 24.0% | 7.5% / 19.1% |
+| qwen3.5 9.7B via Ollama, no fine-tuning | 48.8% | 89.3% / 51.0% | 60.0% | not run |
+| Rule engine (regular expressions) | 76.7% | 97.4% / 77.6% | 84.0% | 46.9% / 82.3% |
+| kmrl-copilot round 1 | 90.7% | 91.8% / 91.8% | 88.0% | 88.1% / 94.7% |
+| **kmrl-copilot round 2** | **97.7%** | **100% / 98.0%** | **100%** | **98.7% / 97.6%** |
+| Gemini (cloud edition, reference) | 100% | 100% / 100% | 100% | not run |
+
+Fine-tuning is what makes the difference: the same 0.5B model goes from 4.7% to 97.7%, and it beats a general
+model 20x its size. Recall by update type, training curves and data composition: `reports/summary.md` and
+`reports/figures/` (rebuild with `uv run --group report python ../ml/make_figures.py`). The terminal demo,
+`uv run python ../ml/demo.py`, shows the raw model output next to what the app makes of it.
 
 - **Round 1**: 8,000 template examples, model computes dates. Failed mostly on calendar arithmetic and once
   invented a certificate renewal.
@@ -88,8 +95,9 @@ handover note takes 4-6 s (Hugging Face `generate` runs at ~28 tokens/s on Windo
 Converting the model to GGUF and serving it with llama.cpp/Ollama would be several times faster; Ollama 0.40
 cannot import this architecture from safetensors directly, so that conversion is a possible next step.
 
-Reports: `reports/eval_rules.json`, `reports/eval_model_round1.json`, `reports/eval_model.json` (latest run),
-and `backend/models/kmrl-copilot/kmrl_model.json` for the training curve.
+Reports (one per engine, each with every failure listed): `reports/eval_rules.json`, `eval_base.json`,
+`eval_ollama.json`, `eval_model_round1.json`, `eval_model_round2.json`; training curves in
+`reports/training_history_round{1,2}.json`.
 
 ## Improving it
 
