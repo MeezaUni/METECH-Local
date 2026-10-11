@@ -15,9 +15,10 @@ from pathlib import Path
 
 from ..models import AIInfo, FleetUpdate, QueryIntent
 from .base import AIContext, AIUnavailable
-from .local_format import ask_messages, load_json, parse_messages
+from .local_format import ask_messages, ground_and_resolve, load_json, parse_messages
 
 log = logging.getLogger(__name__)
+_warnings = threading.local()   # per-request notes about suggestions the grounding check dropped
 
 
 class LocalModelProvider:
@@ -83,14 +84,17 @@ class LocalModelProvider:
     def parse_logbook(self, text: str, ctx: AIContext) -> list[FleetUpdate]:
         raw = self._generate(parse_messages(text, ctx.today), max_new_tokens=min(1024, 160 + 4 * len(text)))
         try:
-            data = load_json(raw)
-            updates = []
-            for u in data.get("updates", []):
-                u.setdefault("train_name", "")   # job-card closures may not name the train
-                updates.append(FleetUpdate.model_validate(u))
-            return updates
-        except ValueError as exc:
+            proposed = [{"train_name": "", **u} for u in load_json(raw).get("updates", [])]   # closures may not name a train
+            kept, dropped = ground_and_resolve(proposed, text, ctx.today)
+            _warnings.items = dropped
+            return [FleetUpdate.model_validate(u) for u in kept]
+        except (ValueError, TypeError, AttributeError) as exc:
             raise AIUnavailable(f"model output was not valid: {exc}") from exc
+
+    def take_warnings(self) -> list[str]:
+        """Notes from the last parse on this thread (suggestions dropped by the grounding check)."""
+        items, _warnings.items = getattr(_warnings, "items", []), []
+        return items
 
     def interpret_question(self, question: str, ctx: AIContext) -> QueryIntent:
         raw = self._generate(ask_messages(question), max_new_tokens=64)

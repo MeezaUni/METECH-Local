@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT.parent / "backend"))
 from app.ai import rules  # noqa: E402
-from app.ai.local_format import ask_messages, load_json, parse_messages  # noqa: E402
+from app.ai.local_format import ask_messages, ground_and_resolve, load_json, parse_messages  # noqa: E402
 from app.priority import apply_policy  # noqa: E402
 
 DEFAULTS = {"expiring_certificates": {"days": 7}, "highest_wear": {"limit": 5}}
@@ -34,7 +34,9 @@ def load_sets() -> dict[str, list[dict]]:
         target = json.loads(r["target"])
         if r["task"] == "parse":
             head, text = content.split("\nLogbook:\n", 1)
-            sets["synthetic"].append({"task": "parse", "today": head.removeprefix("Today: "), "text": text, "expected": target["updates"]})
+            today = head.removeprefix("Today: ")
+            expected, _ = ground_and_resolve(target["updates"], text, date.fromisoformat(today))   # date_text -> date
+            sets["synthetic"].append({"task": "parse", "today": today, "text": text, "expected": expected})
         else:
             sets["synthetic"].append({"task": "ask", "question": content, "expected": target})
     for line in open(ROOT / "data" / "realworld_test.jsonl", encoding="utf-8"):
@@ -91,7 +93,12 @@ class ModelEngine:
         for i, r in enumerate(rows):
             try:
                 data = load_json(raw[i])
-                out.append(data.get("updates", []) if r["task"] == "parse" else data)
+                if r["task"] == "parse":
+                    # Exactly what the backend does: resolve expiry phrases, drop ungrounded suggestions.
+                    proposed = [{"train_name": "", **u} for u in data.get("updates", [])]
+                    out.append(ground_and_resolve(proposed, r["text"], date.fromisoformat(r["today"]))[0])
+                else:
+                    out.append(data)
             except ValueError:
                 out.append(None)  # invalid JSON
         return out

@@ -170,6 +170,14 @@ def roughen(text: str, rng: random.Random, protect: list[str]) -> str:
     return text
 
 
+def exact_span(text: str, phrase: str) -> str:
+    """`phrase` as it appears in `text` (same characters, original case), so labels are copyable spans."""
+    i = text.lower().find(phrase.lower())
+    if i < 0:
+        raise ValueError(f"{phrase!r} not in {text!r}")
+    return text[i:i + len(phrase)]
+
+
 # ------------------------------------------------------------ fact renderers
 def fact_renew(n: int, today: date, rng: random.Random) -> tuple[str, list[dict]]:
     tr = train_ref(n, rng)
@@ -186,7 +194,7 @@ def fact_renew(n: int, today: date, rng: random.Random) -> tuple[str, list[dict]
                 f"{f1} & {f2} {cw} for {tr} extended upto {phrase}",
                 f"Both {f1} and {f2} {cw}s of {tr} renewed, valid until {phrase}",
             ])
-        ups = [{"train_name": tname(n), "action": "renew_certificate", "department": d, "date": when.isoformat()} for d in (d1, d2)]
+        ups = [{"train_name": tname(n), "action": "renew_certificate", "department": d, "date_text": phrase} for d in (d1, d2)]
         return text, ups, [tr, f1, f2, phrase]
     dept = rng.choice(list(DEPT_FORMS))
     df = rng.choice(DEPT_FORMS[dept])
@@ -209,7 +217,8 @@ def fact_renew(n: int, today: date, rng: random.Random) -> tuple[str, list[dict]
             f"{tr} got {df} {cw} renewed. New expiry {phrase}",
             f"renewed {df} {cw} {tr} till {phrase}",
         ])
-    return text, [{"train_name": tname(n), "action": "renew_certificate", "department": dept, "date": when.isoformat()}], [tr, df, phrase]
+    # The label is the expiry *as written*; the backend resolves it to a date (rules.find_date).
+    return text, [{"train_name": tname(n), "action": "renew_certificate", "department": dept, "date_text": phrase}], [tr, df, phrase]
 
 
 def fact_close(n: int, today: date, rng: random.Random) -> tuple[str, list[dict], list[str]]:
@@ -343,6 +352,8 @@ def parse_example(today: date, rng: random.Random) -> dict:
         clause = roughen(clause, rng, protect)
         for u in ups:
             u["source_text"] = clause
+            if "date_text" in u:
+                u["date_text"] = exact_span(clause, u["date_text"])
         parts.append(clause)
         updates.extend(ups)
         if rng.random() < 0.08:  # chatter mixed into real updates
@@ -443,6 +454,36 @@ def ask_example(rng: random.Random) -> dict:
 
 
 # ---------------------------------------------------------------------- main
+def normalise_teacher_row(r: dict) -> dict | None:
+    """Bring a paraphrase.py row to the current label format, or None if it can't be verified.
+
+    Certificate updates must carry `date_text` as an exact span of their source_text. Rows made
+    before that change carry a computed `date` instead: the span is recovered with the backend's
+    own date reader and kept only if it resolves to exactly that date.
+    """
+    from app.ai.rules import find_date
+
+    if r["task"] != "parse":
+        return {"messages": r["messages"], "target": r["target"], "task": r["task"]}
+    today = date.fromisoformat(r["messages"][1]["content"].split("\n", 1)[0].removeprefix("Today: "))
+    updates = json.loads(r["target"])["updates"]
+    for u in updates:
+        if u.get("action") != "renew_certificate":
+            continue
+        try:
+            if "date_text" in u:
+                u["date_text"] = exact_span(u["source_text"], u["date_text"])
+            else:
+                found = find_date(u["source_text"], today)
+                if not found or found[1].isoformat() != u.get("date"):
+                    return None
+                u["date_text"] = found[0]
+        except (ValueError, KeyError):
+            return None
+        u.pop("date", None)
+    return {"messages": r["messages"], "target": dump_updates(updates), "task": "parse"}
+
+
 def build(n_parse: int, n_ask: int, seed: int) -> list[dict]:
     rng = random.Random(seed)
     rows = []
@@ -470,14 +511,18 @@ def main() -> None:
     # message never land in both train and val.
     teacher = out / "paraphrased.jsonl"
     if teacher.exists():
-        added = {"train": 0, "val": 0}
+        added, skipped = {"train": 0, "val": 0}, 0
         for line in open(teacher, encoding="utf-8"):
             r = json.loads(line)
+            row = normalise_teacher_row(r)
+            if row is None:
+                skipped += 1
+                continue
             split = "val" if zlib.crc32(r["base_id"].encode()) % 10 == 0 else "train"
-            sets[split].append({"messages": r["messages"], "target": r["target"], "task": r["task"]})
+            sets[split].append(row)
             added[split] += 1
         random.Random(5).shuffle(sets["train"])
-        print(f"teacher rewrites added: {added['train']} train, {added['val']} val")
+        print(f"teacher rewrites added: {added['train']} train, {added['val']} val ({skipped} skipped: expiry could not be verified)")
 
     for name, rows in sets.items():
         with open(out / f"{name}.jsonl", "w", encoding="utf-8") as f:

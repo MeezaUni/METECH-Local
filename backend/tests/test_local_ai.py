@@ -5,23 +5,71 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from app.ai.local_format import dump_updates, load_json
+from app.ai.local_format import dump_updates, ground_and_resolve, load_json
 from app.models import FleetUpdate, QueryIntent
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "ml"))
 import generate_dataset as gen  # noqa: E402
 
+TODAY = date(2026, 10, 11)
+
 
 def test_generated_labels_are_valid_and_grounded():
     rng = random.Random(0)
-    for _ in range(400):
-        row = gen.parse_example(date(2026, 10, 11), rng)
+    for _ in range(600):
+        row = gen.parse_example(TODAY, rng)
         text = row["messages"][1]["content"].split("\nLogbook:\n", 1)[1]
-        for u in json.loads(row["target"])["updates"]:
-            FleetUpdate.model_validate({**u, "train_name": u.get("train_name", "")})
+        updates = json.loads(row["target"])["updates"]
+        for u in updates:
             assert u["source_text"] in text, (u["source_text"], text)
             if u["action"] == "renew_certificate":
-                assert date.fromisoformat(u["date"]) > date(2026, 10, 11)
+                assert "date" not in u and u["date_text"] in u["source_text"], u   # an exact, copyable span
+        kept, dropped = ground_and_resolve(updates, text, TODAY)
+        assert not dropped, (dropped, text)                                       # every label passes grounding
+        for u in kept:
+            FleetUpdate.model_validate({**u, "train_name": u.get("train_name", "")})
+            if u["action"] == "renew_certificate":
+                assert date.fromisoformat(u["date"]) > TODAY
+
+
+def test_grounding_blocks_invented_updates():
+    text = "B check of TS-24 over. TS-24 good to go"
+    proposed = [
+        {"train_name": "KMRL-TS-024", "action": "complete_maintenance"},
+        {"train_name": "KMRL-TS-024", "action": "renew_certificate", "department": "Telecom", "date_text": "for 6 months"},  # round-1 invention
+        {"train_name": "KMRL-TS-031", "action": "mark_cleaned"},                     # train not in the text
+        {"train_name": "", "action": "close_job_card", "job_card_id": 1099},          # job card not in the text
+    ]
+    kept, dropped = ground_and_resolve(proposed, text, TODAY)
+    assert [u["action"] for u in kept] == ["complete_maintenance"]
+    assert len(dropped) == 3 and any("for 6 months" in d for d in dropped)
+
+
+def test_expiry_phrase_is_resolved_by_code():
+    text = "TS-10 Telecom and Signalling certificates renewed for 6 months"
+    kept, _ = ground_and_resolve(
+        [{"train_name": "KMRL-TS-010", "action": "renew_certificate", "department": d, "date_text": "for 6 months"} for d in ("Telecom", "Signalling")],
+        text, TODAY,
+    )
+    assert [u["date"] for u in kept] == ["2027-04-11", "2027-04-11"]   # round 1 got 2027-03-11
+
+
+def test_round_one_models_still_work():
+    """Models trained before date_text emit a computed date; keep accepting it."""
+    kept, dropped = ground_and_resolve([{"train_name": "KMRL-TS-005", "action": "renew_certificate", "department": "Telecom", "date": "2027-10-10"}],
+                                       "TS 05 telecom FC valid till 10/10/2027", TODAY)
+    assert kept[0]["date"] == "2027-10-10" and not dropped
+
+
+def test_old_teacher_rows_are_converted_and_verified():
+    msg = [{"role": "system", "content": "x"}, {"role": "user", "content": "Today: 2026-10-11\nLogbook:\nTS-22 signalling FC extended for a fortnight"}]
+    def row(d):
+        return {"base_id": "m1", "task": "parse", "messages": msg, "target": json.dumps({"updates": [
+            {"train_name": "KMRL-TS-022", "action": "renew_certificate", "department": "Signalling", "date": d,
+             "source_text": "TS-22 signalling FC extended for a fortnight"}]})}
+    good = gen.normalise_teacher_row(row("2026-10-25"))
+    assert json.loads(good["target"])["updates"][0]["date_text"] == "for a fortnight"
+    assert gen.normalise_teacher_row(row("2026-11-07")) is None   # label and text disagree: dropped
 
 
 def test_generated_intents_are_valid():

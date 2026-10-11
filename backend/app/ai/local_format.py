@@ -24,7 +24,10 @@ ASK_SYSTEM = (
 )
 
 # Field order the model is trained to emit (keeps outputs short and predictable).
-UPDATE_FIELDS = ("train_name", "action", "department", "date", "job_card_id", "description", "priority", "km", "source_text")
+# Certificates carry `date_text`, the expiry exactly as written ("for 6 months", "10/10/2027"):
+# the model copies it, and code (rules.find_date) does the calendar arithmetic. `date` is
+# accepted only for models trained before this change.
+UPDATE_FIELDS = ("train_name", "action", "department", "date_text", "date", "job_card_id", "description", "priority", "km", "source_text")
 INTENT_FIELDS = ("intent", "status", "train_name", "days", "priority", "limit")
 
 
@@ -50,6 +53,52 @@ def dump_updates(updates: list[dict]) -> str:
 
 def dump_intent(intent: dict) -> str:
     return json.dumps({k: intent[k] for k in INTENT_FIELDS if intent.get(k) is not None}, ensure_ascii=False, separators=(",", ":"))
+
+
+_NUMBER = re.compile(r"\d[\d,]*")
+_SPACES = re.compile(r"\s+")
+
+
+def _norm(s: str) -> str:
+    return _SPACES.sub(" ", s.lower()).strip()
+
+
+def ground_and_resolve(updates: list[dict], text: str, today: date) -> tuple[list[dict], list[str]]:
+    """Check each extracted update against the message and turn date phrases into dates.
+
+    An update is kept only if every number it relies on (train, job card, km) and its expiry
+    phrase actually occur in the text: a small model must not invent facts. Returns
+    (kept updates, reasons for anything dropped).
+    """
+    from .rules import find_date   # local import: rules imports models, keep this module light
+
+    numbers = {int(n.replace(",", "")) for n in _NUMBER.findall(text)}
+    norm_text = _norm(text)
+    kept, dropped = [], []
+    for u in updates:
+        u = dict(u)
+        name = u.get("train_name") or ""
+        problems = []
+        if name[-3:].isdigit() and int(name[-3:]) not in numbers:
+            problems.append(f"train {name} is not mentioned")
+        if u.get("job_card_id") is not None and int(u["job_card_id"]) not in numbers:
+            problems.append(f"job card #{u['job_card_id']} is not mentioned")
+        if u.get("km") is not None and int(u["km"]) not in numbers:
+            problems.append(f"{u['km']} km is not mentioned")
+        if u.get("action") == "renew_certificate" and u.get("date_text"):
+            found = find_date(u["date_text"], today)
+            if _norm(u["date_text"]) not in norm_text:
+                problems.append(f"expiry '{u['date_text']}' is not in the text")
+            elif found is None:
+                problems.append(f"could not read the expiry '{u['date_text']}'")
+            else:
+                u["date"] = found[1].isoformat()
+        u.pop("date_text", None)
+        if problems:
+            dropped.append(f"Ignored a suggested {u.get('action', 'update').replace('_', ' ')}: " + "; ".join(problems))
+        else:
+            kept.append(u)
+    return kept, dropped
 
 
 _JSON_OBJECT = re.compile(r"\{.*\}", re.S)

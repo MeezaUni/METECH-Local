@@ -151,6 +151,7 @@ def ai_parse(req: ParseRequest) -> ParseResponse:
     try:
         raw = ai.parse_logbook(req.text, ctx)
         engine = _engine_label()
+        notes += getattr(ai, "take_warnings", lambda: [])()   # e.g. suggestions dropped by a grounding check
     except AIUnavailable as exc:
         raw = rules.parse_logbook(req.text, ctx.today, ctx.job_owner)
         engine = "Rule engine"

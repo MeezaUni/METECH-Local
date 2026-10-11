@@ -30,40 +30,67 @@ HIGH_WORDS = ("high priority", "major", "serious", "not working", "failed", "fai
 
 
 # ------------------------------------------------------------------ dates
-def parse_date(text: str, today: date) -> date | None:
+_ABSOLUTE = [
+    ("iso", re.compile(r"\b(\d{4})-(\d{1,2})-(\d{1,2})\b")),
+    ("dmy_num", re.compile(r"\b(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})\b")),          # Indian day-first
+    ("dmy", re.compile(rf"\b(\d{{1,2}})(?:st|nd|rd|th)?\s+(?:of\s+)?({MONTH_RE})\b\.?(?:,?\s*(\d{{4}})\b)?")),
+    ("mdy", re.compile(rf"\b({MONTH_RE})\b\.?\s+(\d{{1,2}})(?:st|nd|rd|th)?\b(?:,?\s*(\d{{4}})\b)?")),
+]
+_RELATIVE = re.compile(
+    r"\b(?P<lead>(?:for|valid for)\s+)?(?P<mod>(?:another|next|in)\s+)?"
+    r"(?P<n>\d{1,3}|an?|one|two|three|four|six|nine|twelve)?\s*(?P<unit>days?|weeks?|fortnights?|months?|years?)\b",
+    re.I,
+)
+_WORDS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "six": 6, "nine": 9, "twelve": 12}
+
+
+def find_date(text: str, today: date) -> tuple[str, date] | None:
+    """Find a date expression; return (the exact span as written, resolved date).
+
+    Absolute forms win over relative ones. Relative forms ("for 6 months", "for a fortnight",
+    "next week") count from `today`. A day and month without a year means the next such date.
+    """
     t = text.lower()
-    if m := re.search(r"\b(\d{4})-(\d{1,2})-(\d{1,2})\b", t):
-        return _safe_date(int(m[1]), int(m[2]), int(m[3]))
-    if m := re.search(r"\b(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})\b", t):        # Indian day-first
-        y = int(m[3]) + (2000 if len(m[3]) == 2 else 0)
-        return _safe_date(y, int(m[2]), int(m[1]))
-    if m := re.search(rf"\b(\d{{1,2}})(?:st|nd|rd|th)?\s+(?:of\s+)?({MONTH_RE})\.?,?\s*(\d{{4}})?\b", t):
-        return _with_year(int(m[1]), MONTHS[m[2]], m[3], today)
-    if m := re.search(rf"\b({MONTH_RE})\.?\s+(\d{{1,2}})(?:st|nd|rd|th)?,?\s*(\d{{4}})?\b", t):
-        return _with_year(int(m[2]), MONTHS[m[1]], m[3], today)
-    if "day after tomorrow" in t:
-        return today + timedelta(days=2)
-    if "tomorrow" in t:
-        return today + timedelta(days=1)
-    if m := re.search(r"\b(?:for|another|next|in)\s+(\d{1,3}|one|two|three|six|twelve)\s+(day|week|month|year)s?\b", t):
-        n = _num(m[1])
-        unit = m[2]
+    for kind, rx in _ABSOLUTE:
+        m = next((m for m in rx.finditer(t) if not (m.start() and t[m.start() - 1] in "-#/")), None)
+        if not m:   # skip numbers glued to an id: "TS-05 may need cleaning" is not 5 May
+            continue
+        if kind == "iso":
+            d = _safe_date(int(m[1]), int(m[2]), int(m[3]))
+        elif kind == "dmy_num":
+            d = _safe_date(int(m[3]) + (2000 if len(m[3]) == 2 else 0), int(m[2]), int(m[1]))
+        elif kind == "dmy":
+            d = _with_year(int(m[1]), MONTHS[m[2]], m[3], today)
+        else:
+            d = _with_year(int(m[2]), MONTHS[m[1]], m[3], today)
+        if d:
+            return text[m.start():m.end()], d
+    if m := re.search(r"\bday after tomorrow\b", t):
+        return text[m.start():m.end()], today + timedelta(days=2)
+    if m := re.search(r"\btomorrow\b", t):
+        return text[m.start():m.end()], today + timedelta(days=1)
+    for m in _RELATIVE.finditer(t):
+        if not (m["lead"] or m["mod"] or m["n"]):
+            continue   # a bare "year" or "months" is not a date
+        n = _WORDS.get(m["n"] or "a") or int(m["n"])
+        unit = m["unit"].rstrip("s")
         if unit == "day":
-            return today + timedelta(days=n)
-        if unit == "week":
-            return today + timedelta(weeks=n)
-        if unit == "month":
-            return _add_months(today, n)
-        return _add_months(today, 12 * n)
-    if re.search(r"\b(?:a|one)\s+year\b", t):
-        return _add_months(today, 12)
-    if re.search(r"\bnext\s+week\b", t):
-        return today + timedelta(days=7)
+            d = today + timedelta(days=n)
+        elif unit == "week":
+            d = today + timedelta(weeks=n)
+        elif unit == "fortnight":
+            d = today + timedelta(days=14 * n)
+        elif unit == "month":
+            d = _add_months(today, n)
+        else:
+            d = _add_months(today, 12 * n)
+        return text[m.start():m.end()].strip(), d
     return None
 
 
-def _num(s: str) -> int:
-    return {"one": 1, "two": 2, "three": 3, "six": 6, "twelve": 12}.get(s, None) or int(s)
+def parse_date(text: str, today: date) -> date | None:
+    found = find_date(text, today)
+    return found[1] if found else None
 
 
 def _safe_date(y: int, m: int, d: int) -> date | None:
@@ -77,7 +104,7 @@ def _with_year(d: int, m: int, year: str | None, today: date) -> date | None:
     if year:
         return _safe_date(int(year), m, d)
     candidate = _safe_date(today.year, m, d)
-    if candidate and candidate < today:
+    if candidate and candidate <= today:   # an expiry "on 11 Oct" written on 11 Oct means next year
         candidate = _safe_date(today.year + 1, m, d)
     return candidate
 

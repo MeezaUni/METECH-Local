@@ -31,6 +31,14 @@ so the backend loads one ordinary model with plain `transformers`: no adapters a
 Only the JSON answer tokens are trained on; the prompt is masked out, and the vocabulary projection runs only
 on answer tokens, which keeps peak VRAM around 3 GB.
 
+**The model reads; code calculates.** Round 1 showed the classic small-model weakness: it read
+"renewed for 6 months" correctly but did the calendar arithmetic wrong, and once it invented a certificate
+renewal that wasn't in the message. So certificate updates carry `date_text`, the expiry *exactly as written*
+("for 6 months", "10/10/2027"), and the backend turns it into a date with tested code (`rules.find_date`,
+checked against 20,000 generated phrasings). Every suggestion is also grounded before anyone sees it: its train
+number, job card number, km figure and expiry phrase must actually occur in the message, otherwise it is dropped
+and the supervisor is told why (`local_format.ground_and_resolve`).
+
 **Data, step 1: synthesised, labels correct by construction.** There is no public corpus of KMRL logbooks, so
 `generate_dataset.py` starts from the *answer* (a list of updates or a query) and renders it into the text
 depot staff actually write:
