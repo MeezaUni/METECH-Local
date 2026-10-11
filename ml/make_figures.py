@@ -10,6 +10,7 @@ model (copied into ml/reports/ so the figures can be rebuilt without the model f
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from collections import Counter
 from pathlib import Path
@@ -21,13 +22,15 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent
 REPORTS = ROOT / "reports"
-FIGS = REPORTS / "figures"
+# KMRL_FIG_MODE=report: white background, no titles inside the images (the report gives numbered captions).
+REPORT_MODE = os.environ.get("KMRL_FIG_MODE") == "report"
+FIGS = REPORTS / "figures" / "report" if REPORT_MODE else REPORTS / "figures"
 MODELS = ROOT.parent / "backend" / "models"
 
 # Validated categorical palette (dataviz reference slots 1-3; all-pairs CVD-safe), fixed per entity.
 ROUND2, ROUND1, RULES = "#2a78d6", "#eb6834", "#1baf7a"
 NEUTRAL = "#b9b7b0"
-INK, INK_2, GRID, SURFACE = "#0b0b0b", "#52514e", "#e7e5df", "#fcfcfb"
+INK, INK_2, GRID, SURFACE = "#0b0b0b", "#52514e", "#e7e5df", "#ffffff" if REPORT_MODE else "#fcfcfb"
 
 # Gemini scores come from the cloud edition's evaluation on the same test set (METECH-Cloud/eval).
 GEMINI = {"logbook": 1.0, "questions": 1.0}
@@ -56,6 +59,11 @@ def history(round_name: str, model_dir: str) -> list[dict]:
     return json.loads(cached.read_text(encoding="utf-8"))["history"] if cached.exists() else []
 
 
+def title(ax, text: str, **kw) -> None:
+    if not REPORT_MODE:
+        ax.set_title(text, **kw)
+
+
 def grid(ax, axis: str) -> None:
     ax.grid(axis=axis, color=GRID, linewidth=0.8)
     ax.set_axisbelow(True)
@@ -72,15 +80,15 @@ def fig_loss() -> None:
         if not train:
             continue
         xs, ys = zip(*train)
-        ax.plot(xs, ys, color=color, linewidth=2, label=f"{label}, training loss")
+        # The final validation loss rides in the legend: labels at the curve ends collide (both end near 0.002).
+        val_note = f", validation {val[-1][1]:.4f} (dot)" if val else ""
+        ax.plot(xs, ys, color=color, linewidth=2, label=f"{label}{val_note}")
         for vx, vy in val:
             ax.plot([vx], [vy], marker="o", markersize=8, color=color, markeredgecolor=SURFACE, markeredgewidth=2, linestyle="none")
-            ax.annotate(f"validation {vy:.4f}", (vx, vy), textcoords="offset points", xytext=(-6, 10), ha="right", color=INK_2, fontsize=9)
-        ax.annotate(label.split(" (")[0], (xs[-1], ys[-1]), textcoords="offset points", xytext=(6, -2), color=INK, fontsize=9)
     ax.set_yscale("log")
     ax.set_xlabel("Optimiser step (effective batch 16)")
     ax.set_ylabel("Cross-entropy loss (log scale)")
-    ax.set_title("Training loss: both rounds converge within one epoch")
+    title(ax, "Training loss: both rounds converge within one epoch")
     grid(ax, "y")
     ax.legend(frameon=False, loc="upper right", fontsize=9)
     fig.tight_layout()
@@ -133,7 +141,8 @@ def fig_comparison(rows: list[dict]) -> None:
     axes[0].set_yticks(range(len(rows)), labels)
     axes[0].invert_yaxis()
     fig.tight_layout(rect=(0, 0.07, 1, 1))
-    fig.text(0.01, 0.015, "Hand-written real-world test set (43 logbook messages, 25 questions)", ha="left", va="bottom", color=INK_2, fontsize=9.5)
+    if not REPORT_MODE:
+        fig.text(0.01, 0.015, "Hand-written real-world test set (43 logbook messages, 25 questions)", ha="left", va="bottom", color=INK_2, fontsize=9.5)
     fig.savefig(FIGS / "fig2_results_comparison.png", dpi=200)
     plt.close(fig)
 
@@ -172,12 +181,14 @@ def fig_per_action() -> dict:
         ax.barh(ys, [vals.get(a, 0) * 100 for a in actions], height=h, color=color, edgecolor=SURFACE, linewidth=2, label=name)
     for k, a in enumerate(actions):   # label only our model's bars, to keep the chart quiet
         v = series[0][0].get(a, 0) * 100
-        ax.text(v + 1, k - h, f"{v:.0f}%", va="center", color=INK, fontsize=8.5)
+        ax.text(v + 1, k - h, (f"{v:.1f}%" if v < 99.95 else "100%"), va="center", color=INK, fontsize=8.5)
     ax.set_yticks(range(len(actions)), [ACTION_LABELS[a] for a in actions])
     ax.invert_yaxis()
     ax.set_xlim(0, 110)
     ax.set_xlabel("Recall: share of expected updates extracted (synthetic + real-world test sets)")
-    ax.set_title("Where the gains come from, by update type", pad=30)
+    title(ax, "Where the gains come from, by update type", pad=30)
+    if REPORT_MODE:
+        ax.set_title(" ", pad=22)   # room for the legend above the bars
     grid(ax, "x")
     ax.spines["left"].set_visible(False)
     ax.tick_params(axis="y", length=0)
@@ -217,7 +228,7 @@ def fig_dataset() -> dict:
     ax.set_yticks(ys, [k for k, _ in items])
     ax.invert_yaxis()
     ax.set_xlabel("Labelled items in the round-2 training set")
-    ax.set_title("Training data: what the model learned from")
+    title(ax, "Training data: what the model learned from")
     grid(ax, "x")
     ax.spines["left"].set_visible(False)
     ax.tick_params(axis="y", length=0)
